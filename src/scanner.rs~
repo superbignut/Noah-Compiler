@@ -1,4 +1,4 @@
-pub struct Scanner {}
+ pub struct Scanner {}
 
 impl Scanner {
     pub fn new(_source: &str) -> Self {
@@ -12,3 +12,4 @@ impl Scanner {
 
 #[derive(Debug)]
 pub struct Token {}
+ 

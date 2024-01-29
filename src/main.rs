@@ -1,11 +1,11 @@
 use std::fs;
-mod scanner;
-use crate::scanner::*;
+mod lexer;
+use lexer::scanner::Scanner;
 
 fn run_file(file_path: &String) -> Result<(), String> {
     let contents = fs::read_to_string(file_path).unwrap();
 
-    let scanner = Scanner::new(&contents);
+    let mut scanner = Scanner::new(contents);
     let tokens = scanner.scan_tokens()?;
 
     for token in tokens {
