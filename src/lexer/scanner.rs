@@ -19,7 +19,7 @@ impl Scanner {
         }
     }
 
-    pub fn scan_tokens(self: &mut Self) -> Result<Vec<Token>, String> {
+    pub fn scan_tokens(&mut self) -> Result<Vec<Token>, String> {
         while !self.is_at_end() {
             self.start = self.current;
             self.scan_token()?;
@@ -36,10 +36,10 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        return self.current >= self.source.len();
+        self.current >= self.source.len()
     }
 
-    fn scan_token(self: &mut Self) -> Result<Vec<Token>, String> {
+    fn scan_token(&mut self) -> Result<Vec<Token>, String> {
         todo!()
     }
 }
