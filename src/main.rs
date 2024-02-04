@@ -18,6 +18,7 @@ fn run_file(file_path: &String) -> Result<(), String> {
 struct test {
     aaa: String,
 }
+
 fn main() {
     let _ = run_file(&String::from("sources/test.cpp"));
 
