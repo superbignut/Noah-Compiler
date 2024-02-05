@@ -87,20 +87,3 @@ impl std::fmt::Display for TokenType {
         write!(f, "{:?}", self)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    struct Mystruct {
-        a: i32,
-        b: u32,
-    }
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-
-        let mystruct = Mystruct { a: 1, b: 2 };
-
-        //        println!("{:?}", mystruct);
-        assert_eq!(result, 4);
-    }
-}
