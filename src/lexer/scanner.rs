@@ -110,9 +110,9 @@ impl Scanner {
                     self.add_token(TokenType::Slash);
                 }
             }
-            ' ' => {}
-            '\r' => {}
-            '\t' => {}
+
+            ' ' | '\r' | '\t' => {}
+
             '\n' => {
                 self.line += 1;
             }
@@ -243,5 +243,37 @@ impl Scanner {
 
     fn peek_next(&self) -> char {
         self.source.chars().nth(self.current + 1).unwrap_or('\0')
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn handle_one_char_tokens() {
+        let sources = "(())".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens().unwrap();
+
+        dbg!(res);
+    }
+
+    #[test]
+    fn handle_two_char_tokens() {
+        let sources = "! != > >= < <= ==".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens();
+
+        match res {
+            Ok(_) => {
+                dbg!(res);
+            }
+            Err(st) => {
+                println!("{}", st);
+            }
+        }
     }
 }
