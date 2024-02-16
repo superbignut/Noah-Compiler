@@ -4,6 +4,7 @@ use lexer::scanner::Scanner;
 
 fn run_file(file_path: &String) -> Result<(), String> {
     let contents = fs::read_to_string(file_path).unwrap();
+    //println!("{}", contents);
 
     let mut scanner = Scanner::new(contents);
     let tokens = scanner.scan_tokens()?;
@@ -14,16 +15,17 @@ fn run_file(file_path: &String) -> Result<(), String> {
     Ok(())
 }
 
-#[derive(Clone)]
-struct test {
-    aaa: String,
-}
+// #[derive(Clone)]
+// struct test {
+//     aaa: String,
+// }
 
 fn main() {
-    let _ = run_file(&String::from("sources/test.cpp"));
-
-    let tes = test {
-        aaa: String::from("Aa"),
-    };
-    let tse = tes.clone();
+    let res = run_file(&String::from("sources/test.cpp"));
+    // match res {
+    //     Ok(_) => {}
+    //     Err(st) => {
+    //         println!("print is -> {}", st);
+    //     }
+    // }
 }

@@ -69,6 +69,8 @@ impl Scanner {
     // output:
     fn scan_token(&mut self) -> Result<(), String> {
         let temp_char: char = self.advance();
+
+        // Notice: After advance(), self.current points to the new character.
         match temp_char {
             '(' => self.add_token(TokenType::LeftParen),
             ')' => self.add_token(TokenType::RightParen),
@@ -101,6 +103,14 @@ impl Scanner {
                     self.add_token(TokenType::Less);
                 }
             }
+            '=' => {
+                if self.second_operator_match('=') {
+                    self.add_token(TokenType::EqualEqual);
+                } else {
+                    self.add_token(TokenType::Equal);
+                }
+            }
+
             '/' => {
                 if self.second_operator_match('/') {
                     while self.peek() != '\n' && !self.is_at_end() {
@@ -116,15 +126,16 @@ impl Scanner {
             '\n' => {
                 self.line += 1;
             }
+
             '"' => {
-                self.find_a_string()?;
+                self.find_a_string()?; // Todo: add a test!
             }
 
             _ => {
                 if self.is_digit(temp_char) {
-                    self.find_a_number()?;
+                    self.find_a_number()?; // Todo: add a test!
                 } else if self.is_alpha(temp_char) {
-                    self.find_an_identifier()?;
+                    self.find_an_identifier()?; // Todo: add a test!
                 } else {
                     return Err(format!("Unexpected character at line: {}", self.line));
                 }
@@ -136,6 +147,7 @@ impl Scanner {
     // brief:  consumes the next character in the source file and returns it.
     // input:
     // output: next char.
+    // Notice: After advance(), self.current points to the new character.
     fn advance(&mut self) -> char {
         let current_char = self.source.chars().nth(self.current).unwrap_or('\0');
         self.current += 1;
@@ -185,7 +197,7 @@ impl Scanner {
             return Err(String::from("Unterminated String Error!"));
         }
 
-        self.advance();
+        self.advance(); // consume the second ".
 
         let value = self.source[(self.start + 1)..(self.current - 1)].to_string();
         self.add_token_with_literial(TokenType::String, Some(LiterialValue::StringValue(value)));
@@ -257,12 +269,12 @@ mod tests {
 
         let res = scan.scan_tokens().unwrap();
 
-        dbg!(res);
+        //dbg!(res);
     }
 
     #[test]
     fn handle_two_char_tokens() {
-        let sources = "! != > >= < <= ==".to_string();
+        let sources = "! != > >= < <= == =".to_string();
         let mut scan = Scanner::new(sources);
 
         let res = scan.scan_tokens();
@@ -272,7 +284,24 @@ mod tests {
                 dbg!(res);
             }
             Err(st) => {
-                println!("{}", st);
+                println!("print is -> {}", st);
+            }
+        }
+    }
+
+    #[test]
+    fn handle_equal_char_tokens() {
+        let sources = " qweqew \"123\" //aaa".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens();
+
+        match res {
+            Ok(_) => {
+                dbg!(res);
+            }
+            Err(st) => {
+                println!("print is -> {}", st);
             }
         }
     }
