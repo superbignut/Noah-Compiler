@@ -1,4 +1,4 @@
-use std::num::ParseFloatError;
+use std::{collections::HashMap, num::ParseFloatError};
 
 use super::token::{LiterialValue, Token, TokenType};
 
@@ -8,6 +8,8 @@ pub struct Scanner {
     start: usize,
     current: usize,
     line: usize,
+
+    keywords: HashMap<&'static str, TokenType>,
 }
 
 impl Scanner {
@@ -18,8 +20,15 @@ impl Scanner {
             start: 0,
             current: 0,
             line: 1,
+
+            keywords: Self::get_keyword_hashmap(),
         }
     }
+
+    pub fn get_keyword_hashmap() -> HashMap<&'static str, TokenType> {
+        todo!()
+    }
+
     // brief: scan tokens from  self.source,
     // input:
     // output: Convert self.source into Vec<String>
@@ -86,7 +95,7 @@ impl Scanner {
                 if self.second_operator_match('=') {
                     self.add_token(TokenType::BangEqual);
                 } else {
-                    self.add_token(TokenType::Equal);
+                    self.add_token(TokenType::Bang);
                 }
             }
             '>' => {
@@ -128,12 +137,12 @@ impl Scanner {
             }
 
             '"' => {
-                self.find_a_string()?; // Todo: add a test!
+                self.find_a_string()?;
             }
 
             _ => {
                 if self.is_digit(temp_char) {
-                    self.find_a_number()?; // Todo: add a test!
+                    self.find_a_number()?;
                 } else if self.is_alpha(temp_char) {
                     self.find_an_identifier()?; // Todo: add a test!
                 } else {
@@ -188,6 +197,9 @@ impl Scanner {
         true
     }
 
+    // brief: Do sth when find an string.
+    // input:
+    // output: Err or Ok
     fn find_a_string(&mut self) -> Result<(), String> {
         while self.peek() != '"' && !self.is_at_end() {
             self.advance();
@@ -203,6 +215,10 @@ impl Scanner {
         self.add_token_with_literial(TokenType::String, Some(LiterialValue::StringValue(value)));
         Ok(())
     }
+
+    // brief: Do sth when find an Number, and check whether legal.
+    // input:
+    // output: Err or Ok
 
     fn find_a_number(&mut self) -> Result<(), String> {
         while self.is_digit(self.peek()) {
@@ -229,6 +245,9 @@ impl Scanner {
         }
     }
 
+    // brief: Do sth when find an Identifier.
+    // input:
+    // output: Ok
     fn find_an_identifier(&mut self) -> Result<(), String> {
         while self.is_alpha_and_digit(self.peek()) {
             self.advance();
@@ -249,10 +268,16 @@ impl Scanner {
         c.is_ascii_alphabetic() || c == '_'
     }
 
+    // brief: Return current char.
+    // input:
+    // output:
     fn peek(&self) -> char {
         self.source.chars().nth(self.current).unwrap_or('\0')
     }
 
+    // brief: Return next char.
+    // input:
+    // output:
     fn peek_next(&self) -> char {
         self.source.chars().nth(self.current + 1).unwrap_or('\0')
     }
@@ -292,6 +317,40 @@ mod tests {
     #[test]
     fn handle_equal_char_tokens() {
         let sources = " qweqew \"123\" //aaa".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens();
+
+        match res {
+            Ok(_) => {
+                dbg!(res);
+            }
+            Err(st) => {
+                println!("print is -> {}", st);
+            }
+        }
+    }
+
+    #[test]
+    fn handle_equal_string_tokens() {
+        let sources = ">= \"1234\" ==".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens();
+
+        match res {
+            Ok(_) => {
+                dbg!(res);
+            }
+            Err(st) => {
+                println!("print is -> {}", st);
+            }
+        }
+    }
+
+    #[test]
+    fn handle_equal_iden_tokens() {
+        let sources = ">= _abc = 1.123 ==".to_string();
         let mut scan = Scanner::new(sources);
 
         let res = scan.scan_tokens();
