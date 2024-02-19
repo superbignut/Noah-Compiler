@@ -161,7 +161,7 @@ impl Scanner {
                 if self.is_digit(temp_char) {
                     self.find_a_number()?;
                 } else if self.is_alpha(temp_char) {
-                    self.find_an_identifier()?; // Todo: add a test!
+                    self.find_an_identifier()?;
                 } else {
                     return Err(format!("Unexpected character at line: {}", self.line));
                 }
@@ -262,7 +262,7 @@ impl Scanner {
         }
     }
 
-    // brief: Do sth when find an Identifier.
+    // brief: Do sth when find an Identifier, or keyword.
     // input:
     // output: Ok
     fn find_an_identifier(&mut self) -> Result<(), String> {

@@ -22,10 +22,4 @@ fn run_file(file_path: &String) -> Result<(), String> {
 
 fn main() {
     let res = run_file(&String::from("sources/test.cpp"));
-    // match res {
-    //     Ok(_) => {}
-    //     Err(st) => {
-    //         println!("print is -> {}", st);
-    //     }
-    // }
 }
