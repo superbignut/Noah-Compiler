@@ -26,7 +26,24 @@ impl Scanner {
     }
 
     pub fn get_keyword_hashmap() -> HashMap<&'static str, TokenType> {
-        todo!()
+        HashMap::from([
+            ("and", TokenType::And),
+            ("class", TokenType::CLass),
+            ("else", TokenType::Else),
+            ("false", TokenType::False),
+            ("for", TokenType::For),
+            ("fun", TokenType::Fun),
+            ("if", TokenType::If),
+            ("nil", TokenType::Nil),
+            ("or", TokenType::Or),
+            ("print", TokenType::Print),
+            ("return", TokenType::Return),
+            ("super", TokenType::Super),
+            ("this", TokenType::This),
+            ("true", TokenType::True),
+            ("var", TokenType::Var),
+            ("while", TokenType::While),
+        ])
     }
 
     // brief: scan tokens from  self.source,
@@ -37,7 +54,7 @@ impl Scanner {
 
         // Scan the source String.
         while !self.is_at_end() {
-            self.start = self.current; // ?????
+            self.start = self.current;
 
             match self.scan_token() {
                 Ok(_) => {}
@@ -252,7 +269,16 @@ impl Scanner {
         while self.is_alpha_and_digit(self.peek()) {
             self.advance();
         }
-        self.add_token(TokenType::Identifier);
+
+        let text = &self.source[self.start..self.current];
+
+        if self.keywords.contains_key(text) {
+            if let Some(ty) = self.keywords.get(text) {
+                self.add_token(ty.clone());
+            }
+        } else {
+            self.add_token(TokenType::Identifier);
+        }
         Ok(())
     }
 
@@ -364,4 +390,22 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn handle_equal_keyword_tokens() {
+        let sources = ">= var nil iff if".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens();
+
+        match res {
+            Ok(_) => {
+                dbg!(res);
+            }
+            Err(st) => {
+                println!("print is -> {}", st);
+            }
+        }
+    }
+    // cargo test <unique signature: keyword> --  --nocapture
 }
