@@ -1,0 +1,11 @@
+use crate::lexer::token::Token;
+
+pub enum Expr {
+    Binary(BinaryExpr),
+}
+
+pub struct BinaryExpr {
+    left: Box<Expr>,
+    operator: Token,
+    right: Box<Expr>,
+}
