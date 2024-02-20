@@ -34,7 +34,7 @@ pub enum LiterialValue {
     IdentifierVal(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)] // Todo: Partialeq
 pub enum TokenType {
     // Single-character tokens.
     LeftParen,

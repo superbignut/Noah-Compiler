@@ -407,5 +407,28 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn handle_real_sentence() {
+        let sources = "var num = 10.0 \n while true { num >= 1.0 }".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens().unwrap();
+
+        assert_eq!(res.len(), 12);
+        assert_eq!(res[0].token_type, TokenType::Var);
+        assert_eq!(res[1].token_type, TokenType::Identifier);
+        assert_eq!(res[2].token_type, TokenType::Equal);
+        assert_eq!(res[3].token_type, TokenType::Number);
+        assert_eq!(res[4].token_type, TokenType::While);
+        assert_eq!(res[5].token_type, TokenType::True);
+        assert_eq!(res[6].token_type, TokenType::LeftBrace);
+        assert_eq!(res[7].token_type, TokenType::Identifier);
+        assert_eq!(res[8].token_type, TokenType::GreaterEqual);
+        assert_eq!(res[9].token_type, TokenType::Number);
+        assert_eq!(res[10].token_type, TokenType::RightBrace);
+        assert_eq!(res[11].token_type, TokenType::Eof);
+    }
     // cargo test <unique signature: keyword> --  --nocapture
+    // Todo: PartialEq
 }
