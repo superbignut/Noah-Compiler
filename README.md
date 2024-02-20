@@ -3,14 +3,20 @@
 ![Static Badge](https://img.shields.io/badge/Language-Rust-purple)
 ![Static Badge](https://img.shields.io/badge/For-Novice-brown)
 ---
-使用rust来实现一个compiler，代码逻辑来自于[Crafting-Interpreters][1] ( 原代码为java实现 ) ;
+#### 使用rust👾实现一个compiler💻.
+---
 
-此外，代码也很大参考了 youtube上的 [rust 实现版本][2]。
+#### 代码逻辑来自[Crafting-Interpreters][1] ( 原代码为java实现 ) ;
+
+#### 代码实现参考 Youtube上的 [rust 实现版本][2]。
+---
 ### Content:
 
 1. #### Scanner
    
-   ![scan_tokens]()
+   ![scan_tokens](https://github.com/superbignut/ltl-compiler/blob/master/sources/scan_tokens.png)
+2. #### Representing Code
+
 
 
 
