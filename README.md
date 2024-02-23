@@ -12,11 +12,11 @@
 ---
 ### Content:
 
-1. #### Scanner
+1. #### Scanner : Scan the source code.
    
    ![scan_tokens](https://github.com/superbignut/ltl-compiler/blob/master/sources/scan_tokens.png)
-2. #### Representing Code
-
+2. #### Representing Code : A representation for code.
+   ![represent_code](https://github.com/superbignut/ltl-compiler/blob/master/sources/represent_code.png)
 
 
 

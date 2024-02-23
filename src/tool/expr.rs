@@ -72,12 +72,6 @@ impl ExprLiteral {
     }
 }
 
-// pub struct BinaryExpr {
-//     left: Box<Expr>,
-//     operator: Token,
-//     right: Box<Expr>,
-// }
-
 #[cfg(test)]
 mod tests {
     use std::fmt::Binary;
