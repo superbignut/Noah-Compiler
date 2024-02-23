@@ -1,4 +1,4 @@
-use crate::lexer::token::{Token, TokenType};
+use super::token::{Token, TokenType};
 
 pub enum Expr {
     Unary {
@@ -19,7 +19,7 @@ pub enum Expr {
 }
 
 impl Expr {
-    // brief: Convert an Expression to String, which mainly forcus on print/debug.
+    // brief: Convert an Expression to String recursively, which mainly forcus on print/debug.
     // input:
     // output: String.
     pub fn two_string(&self) -> String {
@@ -76,8 +76,8 @@ impl ExprLiteral {
 mod tests {
     use std::fmt::Binary;
 
+    use super::{Expr, ExprLiteral};
     use crate::lexer::token::{LiterialValue, Token, TokenType};
-    use crate::tool::expr::{Expr, ExprLiteral};
 
     #[test]
     fn test_expr() {

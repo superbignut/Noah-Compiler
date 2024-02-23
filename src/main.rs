@@ -1,6 +1,5 @@
 use std::fs;
 mod lexer;
-mod tool;
 use lexer::scanner::Scanner;
 
 fn run_file(file_path: &String) -> Result<(), String> {

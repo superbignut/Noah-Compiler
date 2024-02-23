@@ -238,6 +238,7 @@ impl Scanner {
     // output: Err or Ok
 
     fn find_a_number(&mut self) -> Result<(), String> {
+        // if is_at_end return Err.
         while self.is_digit(self.peek()) {
             self.advance();
         }
@@ -266,6 +267,7 @@ impl Scanner {
     // input:
     // output: Ok
     fn find_an_identifier(&mut self) -> Result<(), String> {
+        // if is_at_end return Err.
         while self.is_alpha_and_digit(self.peek()) {
             self.advance();
         }
