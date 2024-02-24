@@ -1,6 +1,6 @@
 use super::{
-    expr::Expr,
-    token::{Token, TokenType},
+    expr::{Expr, ExprLiteral},
+    token::{LiterialValue, Token, TokenType},
 };
 
 struct Parser {
@@ -12,7 +12,7 @@ impl Parser {
     // brief:
     // input:
     // output:
-    fn new(&self, tokens: Vec<Token>) -> Self {
+    fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, current: 0 }
     }
 
@@ -29,37 +29,147 @@ impl Parser {
     // brief: expression -> equality
     // input:
     // output:
-    fn expression(&self) -> Expr {
+    fn expression(&mut self) -> Expr {
         self.equality()
     }
 
-    // brief:
+    // brief: equality -> comparision ( ("!=" | "==") comparision  ) * ;
+    // 1 != 2 != 3 != 4
     // input:
     // output:
-
-    fn equality(&self) -> Expr {
-        let expr = self.comparision();
+    fn equality(&mut self) -> Expr {
+        let mut expr = self.comparision();
 
         while self.match_tokens(&[TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
-            let right = self.comparision();
+            let right_expr = self.comparision();
+
             expr = Expr::Binary {
                 left: Box::new(expr),
                 operator,
-                right,
+                right: Box::new(right_expr),
             };
         }
 
         expr
     }
 
-    fn comparision(&self) -> Expr {
-        todo!()
+    //comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
+    fn comparision(&mut self) -> Expr {
+        let mut expr = self.term();
+
+        while self.match_tokens(&[
+            TokenType::Greater,
+            TokenType::GreaterEqual,
+            TokenType::Less,
+            TokenType::LessEqual,
+        ]) {
+            let operator = self.previous();
+            let right_expr = self.term();
+
+            expr = Expr::Binary {
+                left: Box::new(expr),
+                operator,
+                right: Box::new(right_expr),
+            };
+        }
+        expr
     }
 
-    fn match_tokens(&self, token_types: &[TokenType]) -> bool {
+    // term -> factor ( ( "-" | "+" ) factor ) * ;
+    fn term(&mut self) -> Expr {
+        let mut expr = self.factor();
+
+        while self.match_tokens(&[TokenType::Minus, TokenType::Plus]) {
+            let operator = self.previous();
+            let right_expr = self.factor();
+
+            expr = Expr::Binary {
+                left: Box::new(expr),
+                operator,
+                right: Box::new(right_expr),
+            };
+        }
+        expr
+    }
+
+    // factor -> unary ( ( "/" | "*") unary ) * ;
+    fn factor(&mut self) -> Expr {
+        let mut expr = self.unary();
+
+        while self.match_tokens(&[TokenType::Slash, TokenType::Star]) {
+            let operator = self.previous();
+            let right_expr = self.factor();
+
+            expr = Expr::Binary {
+                left: Box::new(expr),
+                operator,
+                right: Box::new(right_expr),
+            };
+        }
+        expr
+    }
+
+    // unary -> ( ( "!" | "-" ) unary ) | primary ;
+    fn unary(&mut self) -> Expr {
+        if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
+            let operator = self.previous();
+            let right_expr = self.factor();
+
+            return Expr::Unary {
+                operator,
+                right: Box::new(right_expr),
+            };
+        }
+        self.primary()
+    }
+
+    // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+    fn primary(&mut self) -> Expr {
+        if self.match_tokens(&[TokenType::False]) {
+            return Expr::Literal {
+                value: ExprLiteral::False,
+            };
+        } else if self.match_tokens(&[TokenType::True]) {
+            return Expr::Literal {
+                value: ExprLiteral::True,
+            };
+        } else if self.match_tokens(&[TokenType::Nil]) {
+            return Expr::Literal {
+                value: ExprLiteral::Nil,
+            };
+        } else if self.match_tokens(&[TokenType::String]) {
+            if let Some(LiterialValue::StringValue(v)) = self.previous().literial {
+                return Expr::Literal {
+                    value: ExprLiteral::StringLiteral(v),
+                };
+            }
+        } else if self.match_tokens(&[TokenType::Number]) {
+            if let Some(LiterialValue::FloatValue(v)) = self.previous().literial {
+                return Expr::Literal {
+                    value: ExprLiteral::NumberLiteral(v),
+                };
+            }
+        } else if self.match_tokens(&[TokenType::LeftParen]) {
+            let expr = self.expression();
+            self.consume();
+            Expr::Grouping {
+                expression: Box::new(expr),
+            }
+        } else {
+            todo!() // Add something like Error Address.
+        }
+    }
+
+    fn consume(&mut self) -> Token {
+        todo!()
+    }
+    // brief: Check tempToken and self.current ++n
+    // input:
+    // output:
+    fn match_tokens(&mut self, token_types: &[TokenType]) -> bool {
         for token_type in token_types {
-            if self.check(token_type) {
+            if self.check(token_type.clone()) {
                 self.advance();
                 return true;
             }
@@ -69,15 +179,41 @@ impl Parser {
 
     fn check(&self, token_type: TokenType) -> bool {
         if self.is_at_end() {
-            false
+            return false;
         }
-        self.peek()
+        self.peek().token_type == token_type
     }
+
     // brief: Peek the next char.
     // input:
     // output:
     // Attention : Make sure self.current is available before call self.peek().
     fn peek(&self) -> Token {
         self.tokens.get(self.current).unwrap().clone()
+    }
+
+    // brief:
+    // input:
+    // output:
+    // Attention : if is_at_end() return will be the last one, and current do not increase.
+    fn advance(&mut self) -> Token {
+        if !self.is_at_end() {
+            self.current += 1;
+        }
+        return self.previous();
+    }
+
+    // brief:
+    // input:
+    // output:
+    fn previous(&self) -> Token {
+        self.tokens.get(self.current - 1).unwrap().clone()
+    }
+
+    // brief:
+    // input:
+    // output:
+    fn is_at_end(&self) -> bool {
+        self.peek().token_type == TokenType::Eof
     }
 }

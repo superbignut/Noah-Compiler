@@ -1,5 +1,6 @@
 use super::token::{Token, TokenType};
 
+#[derive(Clone, Debug)]
 pub enum Expr {
     Unary {
         operator: Token,
@@ -52,6 +53,7 @@ impl Expr {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum ExprLiteral {
     NumberLiteral(f64),
     StringLiteral(String),
