@@ -99,7 +99,7 @@ impl Parser {
 
         while self.match_tokens(&[TokenType::Slash, TokenType::Star]) {
             let operator = self.previous();
-            let right_expr = self.factor();
+            let right_expr = self.unary();
 
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -114,7 +114,7 @@ impl Parser {
     fn unary(&mut self) -> Expr {
         if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
-            let right_expr = self.factor();
+            let right_expr = self.unary();
 
             return Expr::Unary {
                 operator,
@@ -127,29 +127,31 @@ impl Parser {
     // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
     fn primary(&mut self) -> Expr {
         if self.match_tokens(&[TokenType::False]) {
-            return Expr::Literal {
+            Expr::Literal {
                 value: ExprLiteral::False,
-            };
+            }
         } else if self.match_tokens(&[TokenType::True]) {
-            return Expr::Literal {
+            Expr::Literal {
                 value: ExprLiteral::True,
-            };
+            }
         } else if self.match_tokens(&[TokenType::Nil]) {
-            return Expr::Literal {
+            Expr::Literal {
                 value: ExprLiteral::Nil,
-            };
+            }
         } else if self.match_tokens(&[TokenType::String]) {
             if let Some(LiterialValue::StringValue(v)) = self.previous().literial {
                 return Expr::Literal {
                     value: ExprLiteral::StringLiteral(v),
                 };
             }
+            todo!()
         } else if self.match_tokens(&[TokenType::Number]) {
             if let Some(LiterialValue::FloatValue(v)) = self.previous().literial {
                 return Expr::Literal {
                     value: ExprLiteral::NumberLiteral(v),
                 };
             }
+            todo!()
         } else if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression();
             self.consume();
@@ -164,7 +166,7 @@ impl Parser {
     fn consume(&mut self) -> Token {
         todo!()
     }
-    // brief: Check tempToken and self.current ++n
+    // brief: Check tempToken and self.current ++ if matched really.
     // input:
     // output:
     fn match_tokens(&mut self, token_types: &[TokenType]) -> bool {
@@ -200,7 +202,7 @@ impl Parser {
         if !self.is_at_end() {
             self.current += 1;
         }
-        return self.previous();
+        self.previous()
     }
 
     // brief:
@@ -217,3 +219,22 @@ impl Parser {
         self.peek().token_type == TokenType::Eof
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Scanner;
+    #[test]
+    fn parser_test_one() {
+        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.0 == 11.0".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        let pas = Parser::new(tok).expression().two_string();
+
+        dbg!(pas);
+    }
+}
+// cargo test <unique signature: keyword> --  --nocapture
+// Todo: Add a Error Address.

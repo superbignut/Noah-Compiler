@@ -432,5 +432,14 @@ mod tests {
         assert_eq!(res[11].token_type, TokenType::Eof);
     }
     // cargo test <unique signature: keyword> --  --nocapture
-    // Todo: PartialEq
+
+    // #[test]
+    // fn handle_parser_sentence() {
+    //     let sources = "1.0 * 3.0 + 2.0 * 4.0 == 11.0".to_string();
+    //     let mut scan = Scanner::new(sources);
+
+    //     let res = scan.scan_tokens().unwrap();
+
+    //     dbg!(res);
+    // }
 }

@@ -38,7 +38,7 @@ impl Expr {
                 let left_str = (*left).two_string();
                 let operator_str = operator.lexeme.clone();
                 let right_str = (*right).two_string();
-                format!("( {} {} {} )", operator_str, left_str, right_str)
+                format!("( {} {} {} )", left_str, operator_str, right_str)
             }
             Expr::Grouping { expression } => {
                 format!("( {} )", (*expression).two_string())
