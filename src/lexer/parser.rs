@@ -29,7 +29,8 @@ impl Parser {
     // brief: expression -> equality
     // input:
     // output:
-    fn expression(&mut self) -> Expr {
+    fn expression(&mut self) -> Result<Expr, String> {
+        let parser_error: Vec<String> = vec![]; // Todo: Error Add together.
         self.equality()
     }
 
@@ -37,12 +38,12 @@ impl Parser {
     // 1 != 2 != 3 != 4
     // input:
     // output:
-    fn equality(&mut self) -> Expr {
-        let mut expr = self.comparision();
+    fn equality(&mut self) -> Result<Expr, String> {
+        let mut expr = self.comparision()?;
 
         while self.match_tokens(&[TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
-            let right_expr = self.comparision();
+            let right_expr = self.comparision()?;
 
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -51,12 +52,12 @@ impl Parser {
             };
         }
 
-        expr
+        Ok(expr)
     }
 
     //comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
-    fn comparision(&mut self) -> Expr {
-        let mut expr = self.term();
+    fn comparision(&mut self) -> Result<Expr, String> {
+        let mut expr = self.term()?;
 
         while self.match_tokens(&[
             TokenType::Greater,
@@ -65,7 +66,7 @@ impl Parser {
             TokenType::LessEqual,
         ]) {
             let operator = self.previous();
-            let right_expr = self.term();
+            let right_expr = self.term()?;
 
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -73,16 +74,16 @@ impl Parser {
                 right: Box::new(right_expr),
             };
         }
-        expr
+        Ok(expr)
     }
 
     // term -> factor ( ( "-" | "+" ) factor ) * ;
-    fn term(&mut self) -> Expr {
-        let mut expr = self.factor();
+    fn term(&mut self) -> Result<Expr, String> {
+        let mut expr = self.factor()?;
 
         while self.match_tokens(&[TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous();
-            let right_expr = self.factor();
+            let right_expr = self.factor()?;
 
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -90,16 +91,16 @@ impl Parser {
                 right: Box::new(right_expr),
             };
         }
-        expr
+        Ok(expr)
     }
 
     // factor -> unary ( ( "/" | "*") unary ) * ;
-    fn factor(&mut self) -> Expr {
-        let mut expr = self.unary();
+    fn factor(&mut self) -> Result<Expr, String> {
+        let mut expr = self.unary()?;
 
         while self.match_tokens(&[TokenType::Slash, TokenType::Star]) {
             let operator = self.previous();
-            let right_expr = self.unary();
+            let right_expr = self.unary()?;
 
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -107,59 +108,61 @@ impl Parser {
                 right: Box::new(right_expr),
             };
         }
-        expr
+        Ok(expr)
     }
 
     // unary -> ( ( "!" | "-" ) unary ) | primary ;
-    fn unary(&mut self) -> Expr {
+    fn unary(&mut self) -> Result<Expr, String> {
         if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
-            let right_expr = self.unary();
+            let right_expr = self.unary()?;
 
-            return Expr::Unary {
+            return Ok(Expr::Unary {
                 operator,
                 right: Box::new(right_expr),
-            };
+            });
         }
         self.primary()
     }
 
     // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
-    fn primary(&mut self) -> Expr {
+    fn primary(&mut self) -> Result<Expr, String> {
         if self.match_tokens(&[TokenType::False]) {
-            Expr::Literal {
+            Ok(Expr::Literal {
                 value: ExprLiteral::False,
-            }
+            })
         } else if self.match_tokens(&[TokenType::True]) {
-            Expr::Literal {
+            Ok(Expr::Literal {
                 value: ExprLiteral::True,
-            }
+            })
         } else if self.match_tokens(&[TokenType::Nil]) {
-            Expr::Literal {
+            Ok(Expr::Literal {
                 value: ExprLiteral::Nil,
-            }
+            })
         } else if self.match_tokens(&[TokenType::String]) {
             if let Some(LiterialValue::StringValue(v)) = self.previous().literial {
-                return Expr::Literal {
+                return Ok(Expr::Literal {
                     value: ExprLiteral::StringLiteral(v),
-                };
+                });
             }
-            todo!()
+            Err(String::from("Error occur at parsering String."))
         } else if self.match_tokens(&[TokenType::Number]) {
             if let Some(LiterialValue::FloatValue(v)) = self.previous().literial {
-                return Expr::Literal {
+                return Ok(Expr::Literal {
                     value: ExprLiteral::NumberLiteral(v),
-                };
+                });
             }
-            todo!()
+            Err(String::from("Error occur at parsering Number."))
         } else if self.match_tokens(&[TokenType::LeftParen]) {
-            let expr = self.expression();
+            let expr = self.expression()?;
             self.consume();
-            Expr::Grouping {
+            Ok(Expr::Grouping {
                 expression: Box::new(expr),
-            }
+            })
         } else {
-            todo!() // Add something like Error Address.
+            Err(String::from(
+                "Parsering error occurs for finding nothing to match with.",
+            ))
         }
     }
 
@@ -251,7 +254,7 @@ mod tests {
 
         let tok = scan.scan_tokens().unwrap();
 
-        let pas = Parser::new(tok).expression().two_string();
+        let pas = Parser::new(tok).expression().unwrap().two_string();
 
         dbg!(pas);
     }
