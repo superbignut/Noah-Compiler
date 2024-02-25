@@ -163,6 +163,26 @@ impl Parser {
         }
     }
 
+    // brief: Tihs is the second version of primary(),clear and short superficially，
+    // which increase the degree of code coupling.So i still use if to match.
+    // input:
+    // output:
+    // fn primary2(&mut self) -> Result<Expr, String> {
+    //     if self.match_tokens(&[TokenType::LeftParen]) {
+    //         let expr = self.expression();
+    //         self.consume();
+    //         Ok(Expr::Grouping {
+    //             expression: Box::new(expr),
+    //         })
+    //     } else {
+    //         let current_token = self.peek();
+    //         self.advance();
+    //         Ok(Expr::Literal {
+    //             value: ExprLiteral::from_token(current_token)?,
+    //         })
+    //     }
+    // }
+
     fn consume(&mut self) -> Token {
         todo!()
     }

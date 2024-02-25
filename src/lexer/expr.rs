@@ -1,4 +1,4 @@
-use super::token::{Token, TokenType};
+use super::token::{LiterialValue, Token, TokenType};
 
 #[derive(Clone, Debug)]
 pub enum Expr {
@@ -25,9 +25,10 @@ impl Expr {
     // output: String.
     pub fn two_string(&self) -> String {
         match self {
+            Expr::Literal { value } => value.two_string().to_string(),
             Expr::Unary { operator, right } => {
                 let operator_str = operator.lexeme.clone();
-                let right_str = (*right).two_string(); // recursion occurs!
+                let right_str = right.two_string(); // recursion occurs!
                 format!("( {} {} )", operator_str, right_str)
             }
             Expr::Binary {
@@ -35,16 +36,13 @@ impl Expr {
                 operator,
                 right,
             } => {
-                let left_str = (*left).two_string();
+                let left_str = left.two_string();
                 let operator_str = operator.lexeme.clone();
-                let right_str = (*right).two_string();
+                let right_str = right.two_string();
                 format!("( {} {} {} )", left_str, operator_str, right_str)
             }
             Expr::Grouping { expression } => {
-                format!("( {} )", (*expression).two_string())
-            }
-            Expr::Literal { value } => {
-                format!("{}", value.two_string())
+                format!("( {} )", expression.two_string())
             }
         }
     }
@@ -72,6 +70,29 @@ impl ExprLiteral {
             Self::Nil => "Nil".to_string(),
         }
     }
+    // brief: Increase the degree of code coupling.
+    // input:
+    // output:
+    // pub fn from_token(token: Token) -> Result<ExprLiteral, String> {
+    //     match token.token_type {
+    //         TokenType::False => Ok(ExprLiteral::False),
+    //         TokenType::True => Ok(ExprLiteral::True),
+    //         TokenType::Nil => Ok(ExprLiteral::Nil),
+    //         TokenType::String => {
+    //             if let Some(LiterialValue::StringValue(v)) = token.literial {
+    //                 return Ok(ExprLiteral::StringLiteral(v));
+    //             }
+    //             Err(String::from("Error occur!"))
+    //         }
+    //         TokenType::Number => {
+    //             if let Some(LiterialValue::FloatValue(v)) = token.literial {
+    //                 return Ok(ExprLiteral::NumberLiteral(v));
+    //             }
+    //             Err(String::from("Error occur!"))
+    //         }
+    //         _ => Err(String::from("Error occur!")),
+    //     }
+    // }
 }
 
 #[cfg(test)]
