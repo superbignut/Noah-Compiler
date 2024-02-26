@@ -32,16 +32,22 @@
 
 3. #### Parsing Expressions
 
-   Vec[Token] => Expr(AST)
+   Vec[Token] => Expr
 
-   使用递归下降法，逐步将一组 Token 匹配成一个表达式 Expr/AST. 具体匹配规则如下，越向下优先级越高：
+   使用递归下降法，逐步将一组 Token 匹配成一个表达式 Expr . 具体匹配规则如下，越向下优先级越高：
 
          最顶层-表达式： expression -> equality
+
          等式表达式： equality -> comparision ( ("!=" | "==") comparision  ) * ;
+
          不等表达式： comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
+
          加法表达式： term -> factor ( ( "-" | "+" ) factor ) * ;
+
          乘法表达式： factor -> unary ( ( "/" | "*") unary ) * ;
+
          一元表达式： unary -> ( ( "!" | "-" ) unary ) | primary ;
+         
          最底层-基础单元： primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
    
    并且，这里的规则实现，刻意的避免了前缀表达式的写法。递归下降法的代码实现十分巧妙,部分如下:
