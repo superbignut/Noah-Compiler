@@ -26,11 +26,14 @@ impl Parser {
     primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
     */
 
+    fn parse(&mut self) -> Result<Expr, String> {
+        self.expression()
+    }
+
     // brief: expression -> equality
     // input:
     // output:
     fn expression(&mut self) -> Result<Expr, String> {
-        let parser_error: Vec<String> = vec![]; // Todo: Error Add together.
         self.equality()
     }
 
@@ -145,23 +148,33 @@ impl Parser {
                     value: ExprLiteral::StringLiteral(v),
                 });
             }
-            Err(String::from("Error occur at parsering String."))
+            Err(format!(
+                "Error occur at parsering String at line {} in {}.",
+                self.peek().line_number,
+                self.peek().lexeme
+            ))
         } else if self.match_tokens(&[TokenType::Number]) {
             if let Some(LiterialValue::FloatValue(v)) = self.previous().literial {
                 return Ok(Expr::Literal {
                     value: ExprLiteral::NumberLiteral(v),
                 });
             }
-            Err(String::from("Error occur at parsering Number."))
+            Err(format!(
+                "Error occur at parsering Number at line {} in {}.",
+                self.peek().line_number,
+                self.peek().lexeme
+            ))
         } else if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
-            self.consume();
+            let _ = self.consume(TokenType::RightParen)?; // Consume the RightParen.
             Ok(Expr::Grouping {
                 expression: Box::new(expr),
             })
         } else {
-            Err(String::from(
-                "Parsering error occurs for finding nothing to match with.",
+            Err(format!(
+                "Parsering error occurs for finding nothing to match with at line {} in {}.",
+                self.peek().line_number,
+                self.peek().lexeme,
             ))
         }
     }
@@ -186,8 +199,45 @@ impl Parser {
     //     }
     // }
 
-    fn consume(&mut self) -> Token {
-        todo!()
+    // brief: Consume the current token, if tokentype matched.
+    // input:
+    // output:
+    fn consume(&mut self, token_type: TokenType) -> Result<Token, String> {
+        if self.check(token_type) {
+            Ok(self.advance())
+        } else {
+            Err(format!(
+                "Parsering error occur when consuming RightParen at line: {} in {}.",
+                self.peek().line_number,
+                self.peek().lexeme,
+            ))
+        }
+    }
+
+    // brief: Unused synchronize to give up the error code.
+    // input:
+    // output:
+    fn synchronize(&mut self) {
+        self.advance(); // Consume the error Token.
+        while !self.is_at_end() {
+            if self.previous().token_type == TokenType::Semicolon {
+                return;
+            }
+            match self.peek().token_type {
+                TokenType::CLass
+                | TokenType::Fun
+                | TokenType::Var
+                | TokenType::For
+                | TokenType::If
+                | TokenType::While
+                | TokenType::Print
+                | TokenType::Return => return,
+
+                _ => {
+                    self.advance();
+                }
+            }
+        }
     }
     // brief: Check tempToken and self.current ++ if matched really.
     // input:
@@ -254,10 +304,9 @@ mod tests {
 
         let tok = scan.scan_tokens().unwrap();
 
-        let pas = Parser::new(tok).expression().unwrap().two_string();
+        let pas = Parser::new(tok).parse().unwrap().two_string();
 
         dbg!(pas);
     }
 }
-// cargo test <unique signature: keyword> --  --nocapture
-// Todo: Add a Error Address.
+// cargo test <unique keyword> --  --nocapture
