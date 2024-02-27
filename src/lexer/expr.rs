@@ -70,6 +70,17 @@ impl ExprLiteral {
             Self::Nil => "Nil".to_string(),
         }
     }
+
+    pub fn is_equal(&self, other: &ExprLiteral) -> bool {
+        match (self, other) {
+            (ExprLiteral::NumberLiteral(v1), ExprLiteral::NumberLiteral(v2)) => *v1 == *v2,
+            (ExprLiteral::StringLiteral(s1), ExprLiteral::StringLiteral(s2)) => *s1 == *s2,
+            (ExprLiteral::True, ExprLiteral::True) => true,
+            (ExprLiteral::False, ExprLiteral::False) => false,
+            (ExprLiteral::Nil, ExprLiteral::Nil) => true,
+            _ => false,
+        }
+    }
     // brief: Increase the degree of code coupling.
     // input:
     // output:

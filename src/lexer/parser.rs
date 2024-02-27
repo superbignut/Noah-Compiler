@@ -299,7 +299,7 @@ mod tests {
     use crate::Scanner;
     #[test]
     fn parser_test_one() {
-        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.0 == 11.0".to_string();
+        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.0 == 11.0".to_string(); //" - true" may not be test by parser, but interpreter. Todo:
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();
