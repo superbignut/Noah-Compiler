@@ -70,9 +70,15 @@
             Ok(expr)
          }
    
+   其中 equality、comparision、term 和 factor 函数的实现几乎一样，函数中的 while 对应着正则表达式中的 "*" ;
 
 
+   ![represent_code](https://github.com/superbignut/ltl-compiler/blob/master/sources/parser1.png)
 
+
+   unary 函数中没有循环，而是使用 if 来进行一次判断 ; 而 primary 函数则是对应着最基本的元素和 使用 "( )" 的情况，它们有着最高的优先级 ; 
+
+   ![represent_code](https://github.com/superbignut/ltl-compiler/blob/master/sources/parser2.png)
 
 
 
