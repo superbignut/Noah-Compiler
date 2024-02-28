@@ -76,7 +76,7 @@ impl ExprLiteral {
             (ExprLiteral::NumberLiteral(v1), ExprLiteral::NumberLiteral(v2)) => *v1 == *v2,
             (ExprLiteral::StringLiteral(s1), ExprLiteral::StringLiteral(s2)) => *s1 == *s2,
             (ExprLiteral::True, ExprLiteral::True) => true,
-            (ExprLiteral::False, ExprLiteral::False) => false,
+            (ExprLiteral::False, ExprLiteral::False) => true,
             (ExprLiteral::Nil, ExprLiteral::Nil) => true,
             _ => false,
         }
