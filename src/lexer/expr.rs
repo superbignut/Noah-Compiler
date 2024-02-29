@@ -61,7 +61,7 @@ pub enum ExprLiteral {
 }
 
 impl ExprLiteral {
-    fn two_string(&self) -> String {
+    pub fn two_string(&self) -> String {
         match self {
             Self::NumberLiteral(v) => v.to_string(),
             Self::StringLiteral(v) => v.clone(),

@@ -1,27 +1,36 @@
 use super::{
     expr::{Expr, ExprLiteral},
+    parser::Parser,
     token::{Token, TokenType},
 };
 
 struct Interpreter {}
 
 impl Interpreter {
-    // brief:
-    // input:
-    // output:
-    fn evaluate(&self, expr: &Expr) -> Result<ExprLiteral, String> {
-        self.match_expr(expr.clone())
+    pub fn new() -> Self {
+        Self {}
     }
     // brief:
     // input:
     // output:
-    fn match_expr(&self, expr: Expr) -> Result<ExprLiteral, String> {
+    pub fn evaluate(&self, expr: &Expr) -> Result<ExprLiteral, String> {
+        self.match_expr(expr)
+    }
+    // brief:
+    // input:
+    // output:
+    fn match_expr(&self, expr: &Expr) -> Result<ExprLiteral, String> {
         match expr {
-            Expr::Literal { value } => Ok(value),
-            Expr::Grouping { expression } => self.evaluate(&expression),
+            // 1 Literal
+            Expr::Literal { value } => Ok(value.clone()),
+
+            // 2 Grouping
+            Expr::Grouping { expression } => self.evaluate(expression),
+
+            // 3 Unary
             Expr::Unary { operator, right } => {
                 if operator.token_type == TokenType::Minus {
-                    if let ExprLiteral::NumberLiteral(v) = self.evaluate(&right)? {
+                    if let ExprLiteral::NumberLiteral(v) = self.evaluate(right)? {
                         return Ok(ExprLiteral::NumberLiteral(-v));
                     }
                     return Err(format!(
@@ -29,25 +38,26 @@ impl Interpreter {
                         operator.line_number, operator.lexeme
                     ));
                 } else if operator.token_type == TokenType::Bang {
-                    return Ok(self.is_truthy(self.evaluate(&right)?));
+                    return Ok(self.is_truthy(self.evaluate(right)?));
                 }
                 Err(format!(
                     "Error occur when interpreter at line {} at {} for no matching unary operator.",
                     operator.line_number, operator.lexeme
                 ))
             }
+            // 4 Binary
             Expr::Binary {
                 left,
                 operator,
                 right,
             } => {
-                let left_operand = self.evaluate(&left)?; // recursively.
-                let right_operand = self.evaluate(&right)?;
+                let left_operand = self.evaluate(left)?; // recursively.
+                let right_operand = self.evaluate(right)?;
 
                 match operator.token_type {
                     TokenType::Minus => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             return Ok(ExprLiteral::NumberLiteral(l_number - r_number));
                         }
@@ -55,11 +65,10 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
-
+                    },
                     TokenType::Slash => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             return Ok(ExprLiteral::NumberLiteral(l_number / r_number));
                         }
@@ -67,11 +76,10 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
-
+                    },
                     TokenType::Star => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             return Ok(ExprLiteral::NumberLiteral(l_number * r_number));
                         }
@@ -79,8 +87,7 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
-
+                    },
                     TokenType::Plus => match (left_operand, right_operand) {
                         (
                             ExprLiteral::NumberLiteral(l_number),
@@ -102,10 +109,9 @@ impl Interpreter {
                         ))
                         }
                     },
-
                     TokenType::Greater => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             if l_number > r_number {
                                 return Ok(ExprLiteral::True);
@@ -117,11 +123,10 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
-
+                    },
                     TokenType::GreaterEqual => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             if l_number >= r_number {
                                 return Ok(ExprLiteral::True);
@@ -133,10 +138,10 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
+                    },
                     TokenType::Less => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             if l_number < r_number {
                                 return Ok(ExprLiteral::True);
@@ -148,10 +153,10 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
+                    },
                     TokenType::LessEqual => {
                         if let (true, l_number, r_number) =
-                            self.check_number_operands(left_operand, right_operand)
+                            self.check_number_operands(&left_operand, &right_operand)
                         {
                             if l_number <= r_number {
                                 return Ok(ExprLiteral::True);
@@ -163,23 +168,21 @@ impl Interpreter {
                             "Error occur when interpreter at line {} at {} for some wrong operand.",
                             operator.line_number, operator.lexeme
                         ))
-                    }
+                    },
                     TokenType::EqualEqual => {
                         if left_operand.is_equal(&right_operand) {
                             Ok(ExprLiteral::True)
                         } else {
                             Ok(ExprLiteral::False)
                         }
-                    }
-
+                    },
                     TokenType::BangEqual => {
                         if !left_operand.is_equal(&right_operand) {
                             Ok(ExprLiteral::True)
                         } else {
                             Ok(ExprLiteral::False)
                         }
-                    }
-
+                    },
                     _ => {
                          Err(format!(
                             "Error occur when interpreter at line {} at {} for no matchine Binary operator.",
@@ -195,8 +198,8 @@ impl Interpreter {
     // output:
     fn check_number_operands(
         &self,
-        l_operand: ExprLiteral,
-        r_operand: ExprLiteral,
+        l_operand: &ExprLiteral,
+        r_operand: &ExprLiteral,
     ) -> (bool, f64, f64) {
         if let (true, v1) = self.check_number_operand(l_operand) {
             if let (true, v2) = self.check_number_operand(r_operand) {
@@ -208,9 +211,9 @@ impl Interpreter {
     // brief:
     // input:
     // output:
-    fn check_number_operand(&self, operand: ExprLiteral) -> (bool, f64) {
+    fn check_number_operand(&self, operand: &ExprLiteral) -> (bool, f64) {
         if let ExprLiteral::NumberLiteral(v) = operand {
-            return (true, v);
+            return (true, *v);
         }
         (false, 0.0)
     }
@@ -226,3 +229,33 @@ impl Interpreter {
 }
 
 // Todo: add a test.
+
+#[cfg(test)]
+mod tests {
+
+    use super::Interpreter;
+    use super::Parser;
+    use crate::Scanner;
+
+    #[test]
+    fn inter_one() {
+        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.1 >= 14.0".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        let pas = Parser::new(tok).parse().unwrap();
+
+        match Interpreter::new().evaluate(&pas) {
+            Ok(v) => {
+                println!("[    PASS!     ] ---> {}", v.two_string());
+            }
+            Err(v) => {
+                println!("[    Error!    ] ---> {}", v);
+            }
+        }
+        //        dbg!(pas);
+    }
+}
+
+// cargo test unique-keyword -- --nocapture

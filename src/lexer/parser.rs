@@ -3,7 +3,7 @@ use super::{
     token::{LiterialValue, Token, TokenType},
 };
 
-struct Parser {
+pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
 }
@@ -12,7 +12,7 @@ impl Parser {
     // brief:
     // input:
     // output:
-    fn new(tokens: Vec<Token>) -> Self {
+    pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, current: 0 }
     }
 
@@ -26,7 +26,7 @@ impl Parser {
     primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
     */
 
-    fn parse(&mut self) -> Result<Expr, String> {
+    pub fn parse(&mut self) -> Result<Expr, String> {
         self.expression()
     }
 
@@ -58,7 +58,9 @@ impl Parser {
         Ok(expr)
     }
 
-    //comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
+    // brief: comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
+    // input:
+    // output:
     fn comparision(&mut self) -> Result<Expr, String> {
         let mut expr = self.term()?;
 
@@ -80,7 +82,9 @@ impl Parser {
         Ok(expr)
     }
 
-    // term -> factor ( ( "-" | "+" ) factor ) * ;
+    // brief: term -> factor ( ( "-" | "+" ) factor ) * ;
+    // input:
+    // output:
     fn term(&mut self) -> Result<Expr, String> {
         let mut expr = self.factor()?;
 
@@ -97,7 +101,9 @@ impl Parser {
         Ok(expr)
     }
 
-    // factor -> unary ( ( "/" | "*") unary ) * ;
+    // brief: factor -> unary ( ( "/" | "*") unary ) * ;
+    // input:
+    // output:
     fn factor(&mut self) -> Result<Expr, String> {
         let mut expr = self.unary()?;
 
@@ -149,7 +155,7 @@ impl Parser {
                 });
             }
             Err(format!(
-                "Error occur at parsering String at line {} in {}.",
+                "Error occur at parsering String at line {} in {}, Maybe an error from Scanner.",
                 self.peek().line_number,
                 self.peek().lexeme
             ))
@@ -160,7 +166,7 @@ impl Parser {
                 });
             }
             Err(format!(
-                "Error occur at parsering Number at line {} in {}.",
+                "Error occur at parsering Number at line {} in {}, Maybe an error from Scanner.",
                 self.peek().line_number,
                 self.peek().lexeme
             ))
@@ -207,7 +213,7 @@ impl Parser {
             Ok(self.advance())
         } else {
             Err(format!(
-                "Parsering error occur when consuming RightParen at line: {} in {}.",
+                "Parsering error occur when consuming some token at line: {} in {}.",
                 self.peek().line_number,
                 self.peek().lexeme,
             ))
@@ -267,7 +273,7 @@ impl Parser {
         self.tokens.get(self.current).unwrap().clone()
     }
 
-    // brief:
+    // brief: return current token and self.current ++
     // input:
     // output:
     // Attention : if is_at_end() return will be the last one, and current do not increase.
@@ -278,14 +284,14 @@ impl Parser {
         self.previous()
     }
 
-    // brief:
+    // brief: peek the previous token.
     // input:
     // output:
     fn previous(&self) -> Token {
         self.tokens.get(self.current - 1).unwrap().clone()
     }
 
-    // brief:
+    // brief: check if self current is at end.
     // input:
     // output:
     fn is_at_end(&self) -> bool {
@@ -299,7 +305,7 @@ mod tests {
     use crate::Scanner;
     #[test]
     fn parser_test_one() {
-        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.0 == 11.0".to_string(); //" - true" may not be test by parser, but interpreter. Todo:
+        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.0 == 11.0".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();
@@ -307,6 +313,57 @@ mod tests {
         let pas = Parser::new(tok).parse().unwrap().two_string();
 
         dbg!(pas);
+    }
+
+    #[test]
+    fn parser_test_two() {
+        let sources = "1.0 >= * 3.0".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+
+    #[test]
+    fn parser_test_three() {
+        let sources = "1.0 >= 1.0 + 2.0 == 4.0".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+
+    #[test]
+    fn parser_test_four() {
+        let sources = "- - - - - - - - true".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
     }
 }
 // cargo test <unique keyword> --  --nocapture
