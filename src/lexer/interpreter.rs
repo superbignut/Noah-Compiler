@@ -1,15 +1,31 @@
 use super::{
     expr::{Expr, ExprLiteral},
     parser::Parser,
+    stmt::Stmt,
     token::{Token, TokenType},
 };
 
-struct Interpreter {}
+struct Interpreter;
 
 impl Interpreter {
     pub fn new() -> Self {
-        Self {}
+        Self
     }
+
+    pub fn interpreter(&self, statements: &Vec<Stmt>) -> Result<(), String> {
+        for statement in statements {
+            match statement {
+                Stmt::Expression(v) => {
+                    let _ = self.evaluate(v)?;
+                }
+                Stmt::Print(v) => {
+                    println!("{}", (self.evaluate(v)?).two_string());
+                }
+            }
+        }
+        Ok(())
+    }
+
     // brief:
     // input:
     // output:
@@ -52,7 +68,7 @@ impl Interpreter {
                 right,
             } => {
                 let left_operand = self.evaluate(left)?; // recursively.
-                let right_operand = self.evaluate(right)?;
+                let right_operand = self.evaluate(right)?; // recursively.
 
                 match operator.token_type {
                     TokenType::Minus => {
@@ -193,6 +209,7 @@ impl Interpreter {
             }
         }
     }
+
     // brief:
     // input:
     // output:
@@ -208,6 +225,7 @@ impl Interpreter {
         }
         (false, 0.0, 0.0)
     }
+
     // brief:
     // input:
     // output:
@@ -217,6 +235,7 @@ impl Interpreter {
         }
         (false, 0.0)
     }
+
     // brief:
     // input:
     // output:
@@ -238,17 +257,39 @@ mod tests {
     use crate::Scanner;
 
     #[test]
-    fn inter_one() {
-        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.1 >= 14.0".to_string();
+    fn test_inter_one() {
+        let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.1 = 14.0".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();
 
         let pas = Parser::new(tok).parse().unwrap();
 
-        match Interpreter::new().evaluate(&pas) {
-            Ok(v) => {
-                println!("[    PASS!     ] ---> {}", v.two_string());
+        // match Interpreter::new().evaluate(&pas) {
+        //     Ok(v) => {
+        //         println!("[    PASS!     ] ---> {}", v.two_string());
+        //     }
+        //     Err(v) => {
+        //         println!("[    Error!    ] ---> {}", v);
+        //     }
+        // }
+        //dbg!(pas);
+    }
+
+    #[test]
+    fn test_inter_two() {
+        let sources =
+            "1.0 * 3.0 * ( 2.0 + 14.0 ) * 4.0 / 8.0 ; \n print \" Successfully!! \"; ".to_string();
+
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        let pas = Parser::new(tok).parse().unwrap();
+
+        match Interpreter::new().interpreter(&pas) {
+            Ok(()) => {
+                println!("[    PASS!     ] ---> Compile Successfully.");
             }
             Err(v) => {
                 println!("[    Error!    ] ---> {}", v);

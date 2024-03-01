@@ -111,7 +111,7 @@ mod tests {
     use std::fmt::Binary;
 
     use super::{Expr, ExprLiteral};
-    use crate::lexer::token::{LiterialValue, Token, TokenType};
+    use super::{LiterialValue, Token, TokenType};
 
     #[test]
     fn test_expr() {

@@ -1,5 +1,6 @@
 use super::{
     expr::{Expr, ExprLiteral},
+    stmt::Stmt,
     token::{LiterialValue, Token, TokenType},
 };
 
@@ -17,17 +18,61 @@ impl Parser {
     }
 
     /*
+    program -> statement * EOF
+
+    statement -> exprStmt | printStmt
+
+    exprStmt -> expression ";"
+
+    printstmt -> "print" expression ";"
+
     expression -> equality
-    equality -> comparision ( ("!=" | "==") comparision  ) * ;
-    comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
-    term -> factor ( ( "-" | "+" ) factor ) * ;
-    factor -> unary ( ( "/" | "*") unary ) * ;
-    unary -> ( ( "!" | "-" ) unary ) | primary ;
-    primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+
+    equality -> comparision ( ("!=" | "==") comparision  ) *
+
+    comparision -> term ( ( ">" | ">=" | "<" | "<=") ) *
+
+    term -> factor ( ( "-" | "+" ) factor ) *
+
+    factor -> unary ( ( "/" | "*") unary ) *
+
+    unary -> ( ( "!" | "-" ) unary ) | primary
+
+    primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
     */
 
-    pub fn parse(&mut self) -> Result<Expr, String> {
-        self.expression()
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, String> {
+        let mut statements = vec![];
+        while !self.is_at_end() {
+            statements.push(self.statement()?);
+        }
+        Ok(statements)
+    }
+
+    fn statement(&mut self) -> Result<Stmt, String> {
+        if self.match_tokens(&[TokenType::Print]) {
+            Ok(self.print_statement()?)
+        } else {
+            Ok(self.expression_statement()?)
+        }
+    }
+
+    //printstmt -> "print" expression ";"
+    fn print_statement(&mut self) -> Result<Stmt, String> {
+        let expr = self.expression()?;
+
+        self.consume(TokenType::Semicolon)?;
+
+        Ok(Stmt::Print(expr))
+    }
+
+    //expression -> equality
+    fn expression_statement(&mut self) -> Result<Stmt, String> {
+        let expr = self.expression()?;
+
+        self.consume(TokenType::Semicolon)?;
+
+        Ok(Stmt::Expression(expr))
     }
 
     // brief: expression -> equality
@@ -310,9 +355,9 @@ mod tests {
 
         let tok = scan.scan_tokens().unwrap();
 
-        let pas = Parser::new(tok).parse().unwrap().two_string();
+        // let pas = Parser::new(tok).parse().unwrap().two_string();
 
-        dbg!(pas);
+        // dbg!(pas);
     }
 
     #[test]
@@ -352,6 +397,39 @@ mod tests {
     #[test]
     fn parser_test_four() {
         let sources = "- - - - - - - - true".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+
+    #[test]
+    fn parser_test_five() {
+        let sources = "1.0 + ".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+    #[test]
+    fn parser_test_six() {
+        let sources = "1.0 + 2.0; \n 2.0 * 3.0 + 4.0;\n".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();

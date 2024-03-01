@@ -50,7 +50,7 @@
          
          最底层-基础单元： primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
    
-   并且，这里的规则实现，刻意的避免了前缀表达式的写法 ; 递归下降法的代码实现十分巧妙,部分如下:
+   并且，这里的规则实现，刻意的避免了前缀表达式的写法 ; 递归下降法的代码实现十分巧妙，部分如下:
 
          fn equality(&mut self) -> Result<Expr, String> {
 
@@ -80,6 +80,11 @@
 
    ![represent_code](https://github.com/superbignut/ltl-compiler/blob/master/sources/parser2.png)
 
+   代码写到这里，可以发现 "=" 等于号暂时没有被考虑进去，但是如果将 "=" 写进去，比如：
+
+         let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.1 = 14.0".to_string();
+         
+   仍然会被成功的解析，原因是由于没有任何一个函数会和 "=" 匹配到，"=" 和后面的 token 都会被省略掉，最后这个表达式只会返回前面部分的AST ; Eof 也是因为同样的道理被忽略。
 
 
 [1]:https://craftinginterpreters.com/
