@@ -22,9 +22,9 @@
 
 2. #### Representing Code
    
-   Expr(AST) => String
+   Expr => String
 
-   通过递归调用 two_string 将 Expr 表达式 或者说一个简单的抽象语法树 AST 转换为 String，相当于手动 ‘反向’ 实现了下一节的内容 ;
+   使用枚举类型 Expr 来代表抽象语法树 AST 的节点，并实现可以递归将 AST 转换为 String 的函数 ;
 
 
    ![represent_code](https://github.com/superbignut/ltl-compiler/blob/master/sources/represent_code.png)
@@ -34,7 +34,7 @@
 
    Vec[Token] => Expr
 
-   使用递归下降法，逐步将一组 Token 匹配成一个表达式 Expr ; 具体匹配规则如下，越向下优先级越高：
+   使用递归下降法，逐步将一组 Token 匹配成一个语法树 Expr ; 具体匹配规则如下，越向下优先级越高：
 
          最顶层-表达式： expression -> equality
 
@@ -86,6 +86,17 @@
          
    仍然会被成功的解析，原因是由于没有任何一个函数会和 "=" 匹配到，"=" 和后面的 token 都会被省略掉，最后这个表达式只会返回前面部分的AST ; Eof 也是因为同样的道理被忽略。
 
+4. #### Evaluating Expressions
+
+   Expr => ExprLiteral
+
+   对一个包含四则运算，比较，括号，取非的语法树 Expr 求值，返回得到的结果。
+
+   得益于第三节已经构建好了语法树 AST，因此求值只需要不断匹配 AST 根节点的运算符，并递归当前节点的左右分支。
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/interpreter.png)
+
+   到现在为止，已经完成了一个类似于计算器的功能 ; 但还只支持一条语句 ;
 
 [1]:https://craftinginterpreters.com/
 [2]:https://www.youtube.com/playlist?list=PLj_VrUwyDuXS4K3n7X4U4qmkjpuA8rJ76
