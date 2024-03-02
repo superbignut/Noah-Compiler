@@ -17,6 +17,9 @@ pub enum Expr {
     Literal {
         value: ExprLiteral,
     },
+    Variable {
+        name: Token,
+    },
 }
 
 impl Expr {
@@ -44,6 +47,7 @@ impl Expr {
             Expr::Grouping { expression } => {
                 format!("( {} )", expression.two_string())
             }
+            Expr::Variable { name } => name.lexeme.clone(), // Todo: Check.
         }
     }
     pub fn print(&self) {

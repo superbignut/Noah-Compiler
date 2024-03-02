@@ -431,6 +431,22 @@ mod tests {
         assert_eq!(res[10].token_type, TokenType::RightBrace);
         assert_eq!(res[11].token_type, TokenType::Eof);
     }
+
+    #[test]
+    fn handle_two_sentence() {
+        let sources = "var num = 10.0; \n while true { num >= 1.0 }".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let res = scan.scan_tokens();
+        match res {
+            Ok(v) => {
+                dbg!(v);
+            }
+            Err(st) => {
+                println!("print is -> {}", st);
+            }
+        }
+    }
     // cargo test <unique signature: keyword> --  --nocapture
 
     // #[test]

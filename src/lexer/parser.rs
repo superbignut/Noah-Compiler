@@ -1,3 +1,5 @@
+use std::ascii::AsciiExt;
+
 use super::{
     expr::{Expr, ExprLiteral},
     stmt::Stmt,
@@ -18,7 +20,11 @@ impl Parser {
     }
 
     /*
-    program -> statement * EOF
+    program -> declaration * EOF
+
+    declaration -> varDecl | statement
+
+    varDecl -> "var" Identifier ( "=" expression ) ? ";"
 
     statement -> exprStmt | printStmt
 
@@ -38,15 +44,49 @@ impl Parser {
 
     unary -> ( ( "!" | "-" ) unary ) | primary
 
-    primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+    primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | Identifier
     */
 
     pub fn parse(&mut self) -> Result<Vec<Stmt>, String> {
         let mut statements = vec![];
         while !self.is_at_end() {
-            statements.push(self.statement()?);
+            statements.push(self.declaration()?);
         }
         Ok(statements)
+    }
+
+    fn declaration(&mut self) -> Result<Stmt, String> {
+        if self.match_tokens(&[TokenType::Var]) {
+            match self.var_declaration() {
+                Ok(v) => {
+                    return Ok(v);
+                }
+                Err(err) => {
+                    self.synchronize();
+                    return Err(err);
+                }
+            }
+        }
+        match self.statement() {
+            Ok(v) => Ok(v),
+            Err(err) => {
+                self.synchronize();
+                Err(err)
+            }
+        }
+    }
+
+    fn var_declaration(&mut self) -> Result<Stmt, String> {
+        let name = self.consume(TokenType::Identifier)?;
+        let mut initializer = Expr::Literal {
+            value: ExprLiteral::Nil,
+        };
+        if self.match_tokens(&[TokenType::Equal]) {
+            initializer = self.expression()?;
+        }
+        let _ = self.consume(TokenType::Semicolon)?;
+
+        Ok(Stmt::Var { name, initializer })
     }
 
     fn statement(&mut self) -> Result<Stmt, String> {
@@ -215,6 +255,10 @@ impl Parser {
                 self.peek().line_number,
                 self.peek().lexeme
             ))
+        } else if self.match_tokens(&[TokenType::Identifier]) {
+            Ok(Expr::Variable {
+                name: self.previous(),
+            })
         } else if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
             let _ = self.consume(TokenType::RightParen)?; // Consume the RightParen.
@@ -265,7 +309,7 @@ impl Parser {
         }
     }
 
-    // brief: Unused synchronize to give up the error code.
+    // brief: Synchronize to give up the error code untill find a Unerror Defination..
     // input:
     // output:
     fn synchronize(&mut self) {
@@ -430,6 +474,23 @@ mod tests {
     #[test]
     fn parser_test_six() {
         let sources = "1.0 + 2.0; \n 2.0 * 3.0 + 4.0;\n".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+
+    #[test]
+    fn parser_test_seven() {
+        let sources = "var abc = 123.0; \n print abc;\n 2.0 * abc + 4.0;\n".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();

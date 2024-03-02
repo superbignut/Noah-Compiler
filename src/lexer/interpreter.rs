@@ -21,6 +21,9 @@ impl Interpreter {
                 Stmt::Print(v) => {
                     println!("{}", (self.evaluate(v)?).two_string());
                 }
+                Stmt::Var { name, initializer } => {
+                    todo!()
+                }
             }
         }
         Ok(())
@@ -206,6 +209,9 @@ impl Interpreter {
                         ))
                     }
                 }
+            }
+            Expr::Variable { name } => {
+                todo!()
             }
         }
     }
