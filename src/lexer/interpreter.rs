@@ -1,28 +1,50 @@
 use super::{
+    environment::Environment,
     expr::{Expr, ExprLiteral},
     parser::Parser,
     stmt::Stmt,
     token::{Token, TokenType},
 };
 
-struct Interpreter;
+struct Interpreter {
+    environment: Environment,
+}
 
 impl Interpreter {
+    // brief:
+    // input:
+    // output:
     pub fn new() -> Self {
-        Self
+        Self {
+            environment: Environment::new(),
+        }
     }
 
-    pub fn interpreter(&self, statements: &Vec<Stmt>) -> Result<(), String> {
+    // brief:
+    // input:
+    // output:
+    pub fn interpreter(&mut self, statements: &Vec<Stmt>) -> Result<(), String> {
         for statement in statements {
             match statement {
+                // If just an expression.
                 Stmt::Expression(v) => {
                     let _ = self.evaluate(v)?;
                 }
+                // If a print statement.
                 Stmt::Print(v) => {
                     println!("{}", (self.evaluate(v)?).two_string());
                 }
+                // If a Var defination.
                 Stmt::Var { name, initializer } => {
-                    todo!()
+                    let value;
+                    if *initializer
+                        != (Expr::Literal {
+                            value: ExprLiteral::Nil,
+                        })
+                    {
+                        value = self.evaluate(initializer)?;
+                        self.environment.define(name.lexeme.clone(), value);
+                    }
                 }
             }
         }
@@ -64,7 +86,10 @@ impl Interpreter {
                     operator.line_number, operator.lexeme
                 ))
             }
-            // 4 Binary
+            // 4 Variable
+            Expr::Variable { name } => Ok(self.environment.get(name)?),
+
+            // 5 Binary
             Expr::Binary {
                 left,
                 operator,
@@ -210,9 +235,6 @@ impl Interpreter {
                     }
                 }
             }
-            Expr::Variable { name } => {
-                todo!()
-            }
         }
     }
 
@@ -286,6 +308,26 @@ mod tests {
     fn test_inter_two() {
         let sources =
             "1.0 * 3.0 * ( 2.0 + 14.0 ) * 4.0 / 8.0 ; \n print \" Successfully!! \"; ".to_string();
+
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        let pas = Parser::new(tok).parse().unwrap();
+
+        match Interpreter::new().interpreter(&pas) {
+            Ok(()) => {
+                println!("[    PASS!     ] ---> Compile Successfully.");
+            }
+            Err(v) => {
+                println!("[    Error!    ] ---> {}", v);
+            }
+        }
+        //        dbg!(pas);
+    }
+    #[test]
+    fn test_inter_three() {
+        let sources = "var a = 10.0;  var b = 2.0; print a + b; ".to_string();
 
         let mut scan = Scanner::new(sources);
 

@@ -70,7 +70,7 @@ impl Parser {
         match self.statement() {
             Ok(v) => Ok(v),
             Err(err) => {
-                self.synchronize();
+                self.synchronize(); // Todo: Check
                 Err(err)
             }
         }
