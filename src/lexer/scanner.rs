@@ -67,7 +67,7 @@ impl Scanner {
         // Add an EOF.
         self.tokens.push(Token {
             token_type: TokenType::Eof,
-            lexeme: "".to_string(),
+            lexeme: "EOF".to_string(),
             literial: None,
             line_number: self.line,
         });

@@ -20,6 +20,10 @@ pub enum Expr {
     Variable {
         name: Token,
     },
+    Assign {
+        name: Token, // not Expr
+        value: Box<Expr>,
+    },
 }
 
 impl Expr {
@@ -48,6 +52,10 @@ impl Expr {
                 format!("( {} )", expression.two_string())
             }
             Expr::Variable { name } => name.lexeme.clone(), // Todo: Check.
+
+            Expr::Assign { name, value } => {
+                todo!()
+            }
         }
     }
     pub fn print(&self) {

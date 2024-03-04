@@ -1,5 +1,5 @@
 use super::{expr::ExprLiteral, token::Token};
-use std::collections::HashMap;
+use std::collections::{btree_map::OccupiedEntry, hash_map::VacantEntry, HashMap};
 
 pub struct Environment {
     values: HashMap<String, ExprLiteral>,
@@ -19,6 +19,16 @@ impl Environment {
     pub fn get(&self, name: &Token) -> Result<ExprLiteral, String> {
         match self.values.get(&name.lexeme) {
             Some(v) => Ok(v.clone()),
+            None => Err(format!("Undefined variable {}.", name.lexeme)),
+        }
+    }
+
+    pub fn assign(&mut self, name: &Token, value: ExprLiteral) -> Result<(), String> {
+        match self.values.get_mut(&name.lexeme) {
+            Some(v) => {
+                *v = value;
+                Ok(())
+            }
             None => Err(format!("Undefined variable {}.", name.lexeme)),
         }
     }

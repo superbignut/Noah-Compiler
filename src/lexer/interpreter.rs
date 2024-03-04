@@ -6,7 +6,7 @@ use super::{
     token::{Token, TokenType},
 };
 
-struct Interpreter {
+pub struct Interpreter {
     environment: Environment,
 }
 
@@ -54,13 +54,13 @@ impl Interpreter {
     // brief:
     // input:
     // output:
-    pub fn evaluate(&self, expr: &Expr) -> Result<ExprLiteral, String> {
+    pub fn evaluate(&mut self, expr: &Expr) -> Result<ExprLiteral, String> {
         self.match_expr(expr)
     }
     // brief:
     // input:
     // output:
-    fn match_expr(&self, expr: &Expr) -> Result<ExprLiteral, String> {
+    fn match_expr(&mut self, expr: &Expr) -> Result<ExprLiteral, String> {
         match expr {
             // 1 Literal
             Expr::Literal { value } => Ok(value.clone()),
@@ -79,7 +79,8 @@ impl Interpreter {
                         operator.line_number, operator.lexeme
                     ));
                 } else if operator.token_type == TokenType::Bang {
-                    return Ok(self.is_truthy(self.evaluate(right)?));
+                    let evaluated = self.evaluate(right)?;
+                    return Ok(self.is_truthy(evaluated));
                 }
                 Err(format!(
                     "Error occur when interpreter at line {} at {} for no matching unary operator.",
@@ -89,13 +90,19 @@ impl Interpreter {
             // 4 Variable
             Expr::Variable { name } => Ok(self.environment.get(name)?),
 
+            Expr::Assign { name, value } => {
+                let real_value = self.evaluate(value)?;
+                self.environment.assign(name, real_value.clone())?;
+                Ok(real_value)
+            }
+
             // 5 Binary
             Expr::Binary {
                 left,
                 operator,
                 right,
             } => {
-                let left_operand = self.evaluate(left)?; // recursively.
+                let left_operand = self.evaluate(left)?; // recursnively.
                 let right_operand = self.evaluate(right)?; // recursively.
 
                 match operator.token_type {
@@ -327,7 +334,48 @@ mod tests {
     }
     #[test]
     fn test_inter_three() {
-        let sources = "var a = 10.0;  var b = 2.0; print a + b + 12.0; ".to_string();
+        let sources = "var a = 10.0; var b = 2.0; print a + b + 12.0; ".to_string();
+
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        let pas = Parser::new(tok).parse().unwrap();
+
+        match Interpreter::new().interpreter(&pas) {
+            Ok(()) => {
+                println!("[    PASS!     ] ---> Compile Successfully.");
+            }
+            Err(v) => {
+                println!("[    Error!    ] ---> {}", v);
+            }
+        }
+        //        dbg!(pas);
+    }
+    #[test]
+    fn test_inter_four() {
+        let sources = "var a = 10.0; var b = 2.0; print a + b + 12.0 >= 25.0 == true; ".to_string();
+
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        let pas = Parser::new(tok).parse().unwrap();
+
+        match Interpreter::new().interpreter(&pas) {
+            Ok(()) => {
+                println!("[    PASS!     ] ---> Compile Successfully.");
+            }
+            Err(v) => {
+                println!("[    Error!    ] ---> {}", v);
+            }
+        }
+        //        dbg!(pas);
+    }
+
+    #[test]
+    fn test_inter_five() {
+        let sources = "var a = 10.0; print a = 20.0; a = a + 20.0; print a ; ".to_string();
 
         let mut scan = Scanner::new(sources);
 

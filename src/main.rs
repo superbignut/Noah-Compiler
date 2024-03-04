@@ -1,25 +1,28 @@
 use std::fs;
 mod lexer;
+use lexer::interpreter::Interpreter;
+use lexer::parser::Parser;
 use lexer::scanner::Scanner;
 
 fn run_file(file_path: &String) -> Result<(), String> {
     let contents = fs::read_to_string(file_path).unwrap();
-    //println!("{}", contents);
 
-    let mut scanner = Scanner::new(contents);
-    let tokens = scanner.scan_tokens()?;
+    let mut scan = Scanner::new(contents);
 
-    for token in tokens {
-        println!("{:?}", token);
-    }
-    Ok(())
+    let tok = scan.scan_tokens().unwrap();
+
+    let pas = Parser::new(tok).parse().unwrap();
+
+    Interpreter::new().interpreter(&pas)
 }
 
-// #[derive(Clone)]
-// struct test {
-//     aaa: String,
-// }
-
 fn main() {
-    let res = run_file(&String::from("sources/test.cpp"));
+    match run_file(&String::from("sources/test.cpp")) {
+        Ok(()) => {
+            println!("[     PASS!    ] ---> Compile Successfully!!!");
+        }
+        Err(v) => {
+            println!("[    Error!    ] ---> {}", v);
+        }
+    }
 }

@@ -113,6 +113,24 @@
    对三种 statement 求值时，print 语句需要打印表达式的值 ; 而 Var 语句则需要将变量和对应的初始值存储起来，进而可以在之后，解析到该变量的时候，将对应的值取出 ; 这个存储的数据结构选用的则是哈希表 ; 
 
 
+   进而添加赋值语句，赋值语句是优先级最低的表达式，并需要保证左侧是 l_value 的硬性要求，可有如下代码：
+
+         fn assignment(&mut self) -> Result<Expr, String> {
+            let expr = self.equality()?;
+            if self.match_tokens(&[TokenType::Equal]) {     // 是否是 "=" ?
+
+               let value = self.assignment()?;              // 允许 a = b = c，从右到左               
+
+               if let Expr::Variable { name } = expr {      // 判断等号左侧是不是变量                     
+                  return Ok(Expr::Assign {                  // Expr::Assign{name:Token, value:Box<Expr>}
+                     name,                                  // 新的 Expr 类型
+                     value: Box::new(value),
+                  });
+               } 
+            }
+            Ok(expr)
+         }
+
 
 [1]:https://craftinginterpreters.com/
 [2]:https://www.youtube.com/playlist?list=PLj_VrUwyDuXS4K3n7X4U4qmkjpuA8rJ76
