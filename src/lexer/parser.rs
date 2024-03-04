@@ -490,7 +490,7 @@ mod tests {
 
     #[test]
     fn parser_test_seven() {
-        let sources = "var abc = 123.0; \n print abc;\n 2.0 * abc + 4.0;\n".to_string();
+        let sources = "var abc = 123.0; \n print abc;\n print  2.0 * abc + 4.0;\n".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();

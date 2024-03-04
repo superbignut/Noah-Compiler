@@ -50,7 +50,7 @@
          
          最底层-基础单元： primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
    
-   并且，这里的规则实现，刻意的避免了前缀表达式的写法 ; 递归下降法的代码实现十分巧妙，部分如下:
+   并且，这里的规则实现，刻意的避免了前缀表达式的写法 ; 递归下降法的代码实现十分巧妙，部分如下：
 
          fn equality(&mut self) -> Result<Expr, String> {
 
@@ -97,6 +97,22 @@
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/interpreter.png)
 
    到现在为止，已经完成了一个类似于计算器的功能 ; 但还只支持一条语句 ;
+
+5. #### Statements and State (8.1 ~ 8.3)
+
+   增加 Var 定义式语句 、Print 输出语句，再结合最初的简单表达式语句 ，现在有三种基本的语句形式：
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/statement.png)
+
+   因此，parser 的结果不再是一个简单的 Expr 语法树，而应该上升到更高的语句层次 ; 并且，除了 Var 语句的变量定义， 为了让
+   变量被定义后，也可以出现在表达式中并被正确 parse 进语法树，还需要在 Expr 中加入代表变量的一项，并对应修改 primary函数 ; 
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/stmt.png)
+
+
+   对三种 statement 求值时，print 语句需要打印表达式的值 ; 而 Var 语句则需要将变量和对应的初始值存储起来，进而可以在之后，解析到该变量的时候，将对应的值取出 ; 这个存储的数据结构选用的则是哈希表 ; 
+
+
 
 [1]:https://craftinginterpreters.com/
 [2]:https://www.youtube.com/playlist?list=PLj_VrUwyDuXS4K3n7X4U4qmkjpuA8rJ76

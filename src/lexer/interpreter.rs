@@ -327,7 +327,7 @@ mod tests {
     }
     #[test]
     fn test_inter_three() {
-        let sources = "var a = 10.0;  var b = 2.0; print a + b; ".to_string();
+        let sources = "var a = 10.0;  var b = 2.0; print a + b + 12.0; ".to_string();
 
         let mut scan = Scanner::new(sources);
 
