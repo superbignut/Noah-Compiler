@@ -1,13 +1,16 @@
 use super::{expr::ExprLiteral, token::Token};
 use std::collections::{btree_map::OccupiedEntry, hash_map::VacantEntry, HashMap};
 
+#[derive(Debug, Clone)]
 pub struct Environment {
+    pub enclosing: Option<Box<Environment>>,
     values: HashMap<String, ExprLiteral>,
 }
 
 impl Environment {
-    pub fn new() -> Self {
+    pub fn new(env: Option<Box<Environment>>) -> Self {
         Self {
+            enclosing: env,
             values: HashMap::new(),
         }
     }
@@ -19,7 +22,13 @@ impl Environment {
     pub fn get(&self, name: &Token) -> Result<ExprLiteral, String> {
         match self.values.get(&name.lexeme) {
             Some(v) => Ok(v.clone()),
-            None => Err(format!("Undefined variable {}.", name.lexeme)),
+            None => {
+                if let Some(v) = &self.enclosing {
+                    v.get(name)
+                } else {
+                    Err(format!("Undefined variable {}.", name.lexeme))
+                }
+            }
         }
     }
 
@@ -29,7 +38,13 @@ impl Environment {
                 *v = value;
                 Ok(())
             }
-            None => Err(format!("Undefined variable {}.", name.lexeme)),
+            None => {
+                if let Some(v) = &mut self.enclosing {
+                    v.assign(name, value)
+                } else {
+                    Err(format!("Undefined variable {}.", name.lexeme))
+                }
+            }
         }
     }
 }

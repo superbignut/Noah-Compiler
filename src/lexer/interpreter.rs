@@ -1,7 +1,7 @@
 use super::{
     environment::Environment,
     expr::{Expr, ExprLiteral},
-    parser::Parser,
+    parser::{self, Parser},
     stmt::Stmt,
     token::{Token, TokenType},
 };
@@ -16,7 +16,7 @@ impl Interpreter {
     // output:
     pub fn new() -> Self {
         Self {
-            environment: Environment::new(),
+            environment: Environment::new(None),
         }
     }
 
@@ -45,6 +45,12 @@ impl Interpreter {
                         value = self.evaluate(initializer)?;
                         self.environment.define(name.lexeme.clone(), value);
                     }
+                }
+                // If a Block.
+                Stmt::Block { statements } => {
+                    self.environment = Environment::new(Some(Box::new(self.environment.clone())));
+                    self.interpreter(statements)?;
+                    self.environment = *self.environment.enclosing.clone().unwrap();
                 }
             }
         }
@@ -87,13 +93,15 @@ impl Interpreter {
                     operator.line_number, operator.lexeme
                 ))
             }
+
             // 4 Variable
             Expr::Variable { name } => Ok(self.environment.get(name)?),
 
+            // 5 Assign
             Expr::Assign { name, value } => {
-                let real_value = self.evaluate(value)?;
-                self.environment.assign(name, real_value.clone())?;
-                Ok(real_value)
+                let new_value = self.evaluate(value)?;
+                self.environment.assign(name, new_value.clone())?;
+                Ok(new_value)
             }
 
             // 5 Binary
@@ -371,6 +379,7 @@ mod tests {
             }
         }
         //        dbg!(pas);
+        p
     }
 
     #[test]

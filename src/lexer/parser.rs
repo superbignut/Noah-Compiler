@@ -24,7 +24,9 @@ impl Parser {
 
     varDecl -> "var" Identifier ( "=" expression ) ? ";"
 
-    statement -> exprStmt | printStmt
+    statement -> exprStmt | printStmt | block
+
+    block -> "{" declaration "}"
 
     exprStmt -> expression ";"
 
@@ -103,9 +105,11 @@ impl Parser {
     // output:
     fn statement(&mut self) -> Result<Stmt, String> {
         if self.match_tokens(&[TokenType::Print]) {
-            Ok(self.print_statement()?)
+            return self.print_statement();
+        } else if self.match_tokens(&[TokenType::LeftBrace]) {
+            return self.block();
         } else {
-            Ok(self.expression_statement()?)
+            return self.expression_statement();
         }
     }
 
@@ -129,6 +133,20 @@ impl Parser {
         self.consume(TokenType::Semicolon)?;
 
         Ok(Stmt::Expression(expr))
+    }
+
+    // block -> "{" declaration "}"
+    // brief:
+    // input:
+    // output:
+    fn block(&mut self) -> Result<Stmt, String> {
+        let mut statements = vec![];
+        // is_at_end check for forgeting closing "}"
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            statements.push(self.declaration()?);
+        }
+        self.consume(TokenType::RightBrace)?;
+        Ok(Stmt::Block { statements })
     }
 
     // brief: expression -> assignment

@@ -1,17 +1,12 @@
 var aaa = 2.0;
 
-var bbb = aaa * (1.0 + aaa);
+{
+  var aaa = 10.0;
+  print aaa;
+}
 
-print bbb;
-    
-print (bbb >= 5.0);
+print aaa;
 
-print 11.0 + 22.0;
+{ aaa = aaa + 20.0; }
 
-var a = 10.0;
-
-print a = 20.0;
-
-a = a + 20.10;
-
-print a ;
+print aaa ;

@@ -113,7 +113,7 @@
    对三种 statement 求值时，print 语句需要打印表达式的值 ; 而 Var 语句则需要将变量和对应的初始值存储起来，进而可以在之后，解析到该变量的时候，将对应的值取出 ; 这个存储的数据结构选用的则是哈希表 ; 
 
 
-   进而添加赋值语句，赋值语句是优先级最低的表达式，并需要保证左侧是 l_value 的硬性要求，可有如下代码：
+   8.4 添加赋值语句 ; 赋值语句是优先级最低的表达式，并需要保证左侧是 l_value 的硬性要求，可有如下 parser 部分代码：
 
          fn assignment(&mut self) -> Result<Expr, String> {
             let expr = self.equality()?;
@@ -130,7 +130,13 @@
             }
             Ok(expr)
          }
+   相应的是对赋值语句的解析部分： 当遇到赋值语句时，要对存储变量的 HashMap 的值进行修改：
 
+         Expr::Assign { name, value } => {
+            let new_value = self.evaluate(value)?;
+            self.environment.assign(name, new_value.clone())?;
+            Ok(new_value)
+         }
 
 [1]:https://craftinginterpreters.com/
 [2]:https://www.youtube.com/playlist?list=PLj_VrUwyDuXS4K3n7X4U4qmkjpuA8rJ76
