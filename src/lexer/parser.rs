@@ -105,11 +105,11 @@ impl Parser {
     // output:
     fn statement(&mut self) -> Result<Stmt, String> {
         if self.match_tokens(&[TokenType::Print]) {
-            return self.print_statement();
+            self.print_statement()
         } else if self.match_tokens(&[TokenType::LeftBrace]) {
-            return self.block();
+            self.block()
         } else {
-            return self.expression_statement();
+            self.expression_statement()
         }
     }
 

@@ -84,21 +84,23 @@
 
          let sources = "1.0 * 3.0 * 2.0 + 2.0 * 4.1 = 14.0".to_string();
          
-   仍然会被成功的解析，原因是由于没有任何一个函数会和 "=" 匹配到，"=" 和后面的 token 都会被省略掉，最后这个表达式只会返回前面部分的AST ; Eof 也是因为同样的道理被忽略。
+   仍然会被成功的解析，原因是由于没有任何一个函数会和 "=" 匹配到，"=" 和后面的 token 都会被省略掉，最后这个表达式只会返回前面部分的AST ; Eof 也是因为同样的道理被忽略 ;
 
 4. #### Evaluating Expressions
 
    Expr => ExprLiteral
 
-   对一个包含四则运算，比较，括号，取非的语法树 Expr 求值，返回得到的结果。
+   对一个包含四则运算，比较，括号，取非的语法树 Expr 求值，返回得到的结果 ;
 
-   得益于第三节已经构建好了语法树 AST，因此求值只需要不断匹配 AST 根节点的运算符，并递归当前节点的左右分支。
+   得益于第三节已经构建好了语法树 AST，因此求值只需要不断匹配 AST 根节点的运算符，并递归当前节点的左右分支 ;
 
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/interpreter.png)
 
    到现在为止，已经完成了一个类似于计算器的功能 ; 但还只支持一条语句 ;
 
-5. #### Statements and State (8.1 ~ 8.3)
+5. #### Statements and State 
+   
+   Var 和 Print 语句 :
 
    增加 Var 定义式语句 、Print 输出语句，再结合最初的简单表达式语句 ，现在有三种基本的语句形式：
 
@@ -113,7 +115,9 @@
    对三种 statement 求值时，print 语句需要打印表达式的值 ; 而 Var 语句则需要将变量和对应的初始值存储起来，进而可以在之后，解析到该变量的时候，将对应的值取出 ; 这个存储的数据结构选用的则是哈希表 ; 
 
 
-   8.4 添加赋值语句 ; 赋值语句是优先级最低的表达式，并需要保证左侧是 l_value 的硬性要求，可有如下 parser 部分代码：
+   赋值语句 :
+   
+   赋值语句是优先级最低的表达式，并需要保证左侧是 l_value 的硬性要求，可有如下 parser 部分代码：
 
          fn assignment(&mut self) -> Result<Expr, String> {
             let expr = self.equality()?;
@@ -137,6 +141,15 @@
             self.environment.assign(name, new_value.clone())?;
             Ok(new_value)
          }
+   作用域 :
+
+   parser 部分将每一个大括号的所有内容解析为一个语句的集合：Vec[Stmt]； 
+   
+   解析部分则要对每一个"{}" , 维护一个变量空间：对应之前提到的哈希表，用来存储局部变量的值，并需要实现变量遮蔽和向外查找的基本功能 ; 
+
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/scope.png)
+
 
 [1]:https://craftinginterpreters.com/
 [2]:https://www.youtube.com/playlist?list=PLj_VrUwyDuXS4K3n7X4U4qmkjpuA8rJ76

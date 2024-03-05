@@ -10,3 +10,7 @@ print aaa;
 { aaa = aaa + 20.0; }
 
 print aaa ;
+
+var bbb = aaa;
+
+print bbb = aaa = 10.0;
