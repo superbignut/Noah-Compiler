@@ -1,16 +1,26 @@
-var aaa = 2.0;
+var aaa = 1.0;
+var bbb = true;
+var ccc = "aaa";
+{
+  aaa = aaa + 1.0;
+  aaa = aaa * 2.0;
+  print aaa;
+
+  
+  var bbb = false;
+  {
+    var bbb = 10.0;
+    print bbb;
+  }
+  print bbb;
+
+  print ccc == "aaa";
+  print ccc;
+}
+print bbb;
 
 {
-  var aaa = 10.0;
+  var aaa = aaa * 2.0;
   print aaa;
+  
 }
-
-print aaa;
-
-{ aaa = aaa + 20.0; }
-
-print aaa ;
-
-var bbb = aaa;
-
-print bbb = aaa = 10.0;

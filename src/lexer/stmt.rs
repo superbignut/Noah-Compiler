@@ -4,6 +4,16 @@ use super::{expr::Expr, token::Token};
 pub enum Stmt {
     Expression(Expr),
     Print(Expr),
-    Var { name: Token, initializer: Expr },
-    Block { statements: Vec<Stmt> },
+    Var {
+        name: Token,
+        initializer: Expr,
+    },
+    Block {
+        statements: Vec<Stmt>,
+    },
+    If {
+        condition: Expr,
+        thenBranch: Box<Stmt>,
+        elseBranch: Option<Box<Stmt>>,
+    },
 }

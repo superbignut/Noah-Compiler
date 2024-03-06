@@ -7,11 +7,11 @@ use super::{
 };
 
 pub struct Interpreter {
-    environment: Environment,
+    environment: Environment, // struct to save variavle and create scope.
 }
 
 impl Interpreter {
-    // brief:
+    // brief: Create a Interpreter, with setting previous Env None.
     // input:
     // output:
     pub fn new() -> Self {
@@ -20,7 +20,7 @@ impl Interpreter {
         }
     }
 
-    // brief:
+    // brief: Pub function to evaluate Vec<Stmt> by Match all kinds of Stmt.
     // input:
     // output:
     pub fn interpreter(&mut self, statements: &Vec<Stmt>) -> Result<(), String> {
@@ -28,11 +28,11 @@ impl Interpreter {
             match statement {
                 // If just an expression.
                 Stmt::Expression(v) => {
-                    let _ = self.evaluate(v)?;
+                    let _ = self.evaluate(v)?; // Evaluate Expression.
                 }
                 // If a print statement.
                 Stmt::Print(v) => {
-                    println!("{}", (self.evaluate(v)?).two_string());
+                    println!("{}", (self.evaluate(v)?).two_string()); // Print Expression.
                 }
                 // If a Var defination.
                 Stmt::Var { name, initializer } => {
@@ -43,13 +43,13 @@ impl Interpreter {
                         })
                     {
                         value = self.evaluate(initializer)?;
-                        self.environment.define(name.lexeme.clone(), value);
+                        self.environment.define(name.lexeme.clone(), value); // Define variable in the temp Environment.
                     }
                 }
                 // If a Block.
                 Stmt::Block { statements } => {
-                    self.environment = Environment::new(Some(Box::new(self.environment.clone())));
-                    self.interpreter(statements)?;
+                    self.environment = Environment::new(Some(Box::new(self.environment.clone()))); // Save temp environment.and Restore later.
+                    self.interpreter(statements)?; // Scope recursively;
                     self.environment = *self.environment.enclosing.clone().unwrap();
                 }
             }
@@ -57,13 +57,14 @@ impl Interpreter {
         Ok(())
     }
 
-    // brief:
+    // brief: Evaluate an Expression.
     // input:
     // output:
     pub fn evaluate(&mut self, expr: &Expr) -> Result<ExprLiteral, String> {
         self.match_expr(expr)
     }
-    // brief:
+
+    // brief: Match all kinds of Expression recursively.
     // input:
     // output:
     fn match_expr(&mut self, expr: &Expr) -> Result<ExprLiteral, String> {
@@ -72,7 +73,7 @@ impl Interpreter {
             Expr::Literal { value } => Ok(value.clone()),
 
             // 2 Grouping
-            Expr::Grouping { expression } => self.evaluate(expression),
+            Expr::Grouping { expression } => self.evaluate(expression), // recursively.
 
             // 3 Unary
             Expr::Unary { operator, right } => {
@@ -95,12 +96,12 @@ impl Interpreter {
             }
 
             // 4 Variable
-            Expr::Variable { name } => Ok(self.environment.get(name)?),
+            Expr::Variable { name } => Ok(self.environment.get(name)?), // Get variable.
 
             // 5 Assign
             Expr::Assign { name, value } => {
-                let new_value = self.evaluate(value)?;
-                self.environment.assign(name, new_value.clone())?;
+                let new_value = self.evaluate(value)?; // recursively.
+                self.environment.assign(name, new_value.clone())?; // define variable.
                 Ok(new_value)
             }
 
@@ -110,7 +111,7 @@ impl Interpreter {
                 operator,
                 right,
             } => {
-                let left_operand = self.evaluate(left)?; // recursnively.
+                let left_operand = self.evaluate(left)?; // recursively.
                 let right_operand = self.evaluate(right)?; // recursively.
 
                 match operator.token_type {
@@ -253,7 +254,7 @@ impl Interpreter {
         }
     }
 
-    // brief:
+    // brief: operand is f64 ?
     // input:
     // output:
     fn check_number_operands(
@@ -269,7 +270,7 @@ impl Interpreter {
         (false, 0.0, 0.0)
     }
 
-    // brief:
+    // brief: operand is f64 ?
     // input:
     // output:
     fn check_number_operand(&self, operand: &ExprLiteral) -> (bool, f64) {
@@ -279,7 +280,7 @@ impl Interpreter {
         (false, 0.0)
     }
 
-    // brief:
+    // brief: All is true but nil and false.
     // input:
     // output:
     fn is_truthy(&self, expr: ExprLiteral) -> ExprLiteral {
@@ -289,8 +290,6 @@ impl Interpreter {
         }
     }
 }
-
-// Todo: add a test.
 
 #[cfg(test)]
 mod tests {
@@ -379,7 +378,6 @@ mod tests {
             }
         }
         //        dbg!(pas);
-        p
     }
 
     #[test]

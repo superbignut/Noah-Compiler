@@ -5,12 +5,12 @@ use super::{
 };
 
 pub struct Parser {
-    tokens: Vec<Token>,
-    current: usize,
+    tokens: Vec<Token>, //
+    current: usize,     // num to index when parse Vec<Token>
 }
 
 impl Parser {
-    // brief:
+    // brief: Create a Parser with Token vector , and set self.current to 0.
     // input:
     // output:
     pub fn new(tokens: Vec<Token>) -> Self {
@@ -24,7 +24,9 @@ impl Parser {
 
     varDecl -> "var" Identifier ( "=" expression ) ? ";"
 
-    statement -> exprStmt | printStmt | block
+    statement -> exprStmt | printStmt | block | ifStmt
+
+    ifStmt -> "if" "(" expression ")" statement ("else" statement ) ?
 
     block -> "{" declaration "}"
 
@@ -49,18 +51,19 @@ impl Parser {
     primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | Identifier
     */
 
-    // brief:
+    // brief: Pub function used to Parse a Vec<Stmt>.
     // input:
     // output:
     pub fn parse(&mut self) -> Result<Vec<Stmt>, String> {
         let mut statements = vec![];
         while !self.is_at_end() {
+            // while not at end, continue to call self.declaration().
             statements.push(self.declaration()?);
         }
         Ok(statements)
     }
 
-    // brief:
+    // brief: declaration -> varDecl | statement
     // input:
     // output:
     fn declaration(&mut self) -> Result<Stmt, String> {
@@ -84,7 +87,7 @@ impl Parser {
         }
     }
 
-    // brief:
+    // brief: varDecl -> "var" Identifier ( "=" expression ) ? ";"
     // input:
     // output:
     fn var_declaration(&mut self) -> Result<Stmt, String> {
@@ -99,8 +102,9 @@ impl Parser {
 
         Ok(Stmt::Var { name, initializer })
     }
+    //
 
-    // brief:
+    // brief: statement -> exprStmt | printStmt | block | ifStmt
     // input:
     // output:
     fn statement(&mut self) -> Result<Stmt, String> {
@@ -108,9 +112,31 @@ impl Parser {
             self.print_statement()
         } else if self.match_tokens(&[TokenType::LeftBrace]) {
             self.block()
+        } else if self.match_tokens(&[TokenType::If]) {
+            self.if_statement()
         } else {
             self.expression_statement()
         }
+    }
+
+    // brief: ifStmt -> "if" "(" expression ")" statement ("else" statement ) ?
+    // input:
+    // output:
+    fn if_statement(&mut self) -> Result<Stmt, String> {
+        self.consume(TokenType::LeftParen)?;
+        let condition = self.expression()?;
+        self.consume(TokenType::RightParen)?;
+        let then_branch = Box::new(self.statement()?);
+        let mut else_branch = None;
+        if self.match_tokens(&[TokenType::Else]) {
+            else_branch = Some(Box::new(self.statement()?));
+        }
+
+        Ok(Stmt::If {
+            condition,
+            thenBranch: then_branch,
+            elseBranch: else_branch,
+        })
     }
 
     // brief: printstmt -> "print" expression ";"
@@ -124,7 +150,7 @@ impl Parser {
         Ok(Stmt::Print(expr))
     }
 
-    // brief:
+    // brief: exprStmt -> expression ";"
     // input:
     // output:
     fn expression_statement(&mut self) -> Result<Stmt, String> {
@@ -135,8 +161,7 @@ impl Parser {
         Ok(Stmt::Expression(expr))
     }
 
-    // block -> "{" declaration "}"
-    // brief:
+    // brief: block -> "{" declaration "}"
     // input:
     // output:
     fn block(&mut self) -> Result<Stmt, String> {
@@ -179,7 +204,7 @@ impl Parser {
         Ok(expr)
     }
 
-    // brief: equality -> comparision ( ("!=" | "==") comparision  ) * ;
+    // brief: equality -> comparision ( ("!=" | "==") comparision  ) *
     // 1 != 2 != 3 != 4
     // input:
     // output:
@@ -200,7 +225,7 @@ impl Parser {
         Ok(expr)
     }
 
-    // brief: comparision -> term ( ( ">" | ">=" | "<" | "<=") ) * ;
+    // brief: comparision -> term ( ( ">" | ">=" | "<" | "<=") ) *
     // input:
     // output:
     fn comparision(&mut self) -> Result<Expr, String> {
@@ -224,7 +249,7 @@ impl Parser {
         Ok(expr)
     }
 
-    // brief: term -> factor ( ( "-" | "+" ) factor ) * ;
+    // brief: term -> factor ( ( "-" | "+" ) factor ) *
     // input:
     // output:
     fn term(&mut self) -> Result<Expr, String> {
@@ -243,7 +268,7 @@ impl Parser {
         Ok(expr)
     }
 
-    // brief: factor -> unary ( ( "/" | "*") unary ) * ;
+    // brief: factor -> unary ( ( "/" | "*") unary ) *
     // input:
     // output:
     fn factor(&mut self) -> Result<Expr, String> {
@@ -262,7 +287,9 @@ impl Parser {
         Ok(expr)
     }
 
-    // unary -> ( ( "!" | "-" ) unary ) | primary ;
+    // brief: unary -> ( ( "!" | "-" ) unary ) | primary
+    // input:
+    // output:
     fn unary(&mut self) -> Result<Expr, String> {
         if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
@@ -276,7 +303,9 @@ impl Parser {
         self.primary()
     }
 
-    // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+    // brief: primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | Idetifier
+    // input:
+    // output:
     fn primary(&mut self) -> Result<Expr, String> {
         if self.match_tokens(&[TokenType::False]) {
             Ok(Expr::Literal {
@@ -404,6 +433,9 @@ impl Parser {
         false
     }
 
+    // brief: Check tempToken by using peek().
+    // input:
+    // output:
     fn check(&self, token_type: TokenType) -> bool {
         if self.is_at_end() {
             return false;
