@@ -20,9 +20,9 @@ impl Parser {
     /*
     program -> declaration * EOF
 
-    declaration -> varDecl | statement
+    declaration -> letDecl | statement
 
-    varDecl -> "var" Identifier ( "=" expression ) ? ";"
+    letDecl -> "let" Identifier ( "=" expression ) ? ";"
 
     statement -> exprStmt | printStmt | block | ifStmt
 
@@ -36,7 +36,11 @@ impl Parser {
 
     expression -> assignment
 
-    assignment -> Identifier "=" assignment | equality
+    assignment -> Identifier "=" assignment | logic_or
+
+    logic_or -> logic_and ( "or" logic_and) *
+
+    logic_and -> equality ( "and" equality) *
 
     equality -> comparision ( ("!=" | "==") comparision  ) *
 
@@ -63,12 +67,12 @@ impl Parser {
         Ok(statements)
     }
 
-    // brief: declaration -> varDecl | statement
+    // brief: declaration -> letDecl | statement
     // input:
     // output:
     fn declaration(&mut self) -> Result<Stmt, String> {
-        if self.match_tokens(&[TokenType::Var]) {
-            match self.var_declaration() {
+        if self.match_tokens(&[TokenType::Let]) {
+            match self.let_declaration() {
                 Ok(v) => {
                     return Ok(v);
                 }
@@ -87,10 +91,10 @@ impl Parser {
         }
     }
 
-    // brief: varDecl -> "var" Identifier ( "=" expression ) ? ";"
+    // brief: letDecl -> "let" Identifier ( "=" expression ) ? ";"
     // input:
     // output:
-    fn var_declaration(&mut self) -> Result<Stmt, String> {
+    fn let_declaration(&mut self) -> Result<Stmt, String> {
         let name = self.consume(TokenType::Identifier)?;
         let mut initializer = Expr::Literal {
             value: ExprLiteral::Nil,
@@ -100,7 +104,7 @@ impl Parser {
         }
         let _ = self.consume(TokenType::Semicolon)?;
 
-        Ok(Stmt::Var { name, initializer })
+        Ok(Stmt::Let { name, initializer })
     }
     //
 
@@ -124,10 +128,15 @@ impl Parser {
     // output:
     fn if_statement(&mut self) -> Result<Stmt, String> {
         self.consume(TokenType::LeftParen)?;
+
         let condition = self.expression()?;
+
         self.consume(TokenType::RightParen)?;
+
         let then_branch = Box::new(self.statement()?);
+
         let mut else_branch = None;
+
         if self.match_tokens(&[TokenType::Else]) {
             else_branch = Some(Box::new(self.statement()?));
         }
@@ -181,11 +190,11 @@ impl Parser {
         self.assignment()
     }
 
-    // brief: assignment -> Identifier "=" assignment | equality
+    // brief: assignment -> Identifier "=" assignment | logic_or
     // input:
     // output:
     fn assignment(&mut self) -> Result<Expr, String> {
-        let expr = self.equality()?;
+        let expr = self.logic_or()?;
         if self.match_tokens(&[TokenType::Equal]) {
             let equals = self.previous();
             let value = self.assignment()?;
@@ -204,8 +213,45 @@ impl Parser {
         Ok(expr)
     }
 
+    // brief: logic_or -> logic_and ( "or" logic_and) *
+    // input:
+    // output:
+    fn logic_or(&mut self) -> Result<Expr, String> {
+        let mut expr = self.logic_and()?;
+
+        while self.match_tokens(&[TokenType::Or]) {
+            let operator = self.previous();
+            let right_expr = self.logic_and()?;
+
+            expr = Expr::Logical {
+                left: Box::new(expr),
+                operator,
+                right: Box::new(right_expr),
+            }
+        }
+        Ok(expr)
+    }
+
+    // brief: logic_and -> equality ( "and" equality) *
+    // input:
+    // output:
+    fn logic_and(&mut self) -> Result<Expr, String> {
+        let mut expr = self.equality()?;
+
+        while self.match_tokens(&[TokenType::And]) {
+            let operator = self.previous();
+            let right_expr = self.equality()?;
+
+            expr = Expr::Logical {
+                left: Box::new(expr),
+                operator,
+                right: Box::new(right_expr),
+            }
+        }
+        Ok(expr)
+    }
+
     // brief: equality -> comparision ( ("!=" | "==") comparision  ) *
-    // 1 != 2 != 3 != 4
     // input:
     // output:
     fn equality(&mut self) -> Result<Expr, String> {
@@ -407,7 +453,7 @@ impl Parser {
             match self.peek().token_type {
                 TokenType::CLass
                 | TokenType::Fun
-                | TokenType::Var
+                | TokenType::Let
                 | TokenType::For
                 | TokenType::If
                 | TokenType::While
@@ -579,7 +625,7 @@ mod tests {
 
     #[test]
     fn parser_test_seven() {
-        let sources = "var abc = 123.0; \n print abc;\n print  2.0 * abc + 4.0;\n".to_string();
+        let sources = "let abc = 123.0; \n print abc;\n print  2.0 * abc + 4.0;\n".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();
@@ -597,7 +643,7 @@ mod tests {
     #[test]
     fn parser_test_eight() {
         let sources =
-            "var abc = 123.0; var ltl = true; \n print abc;\n print  2.0 * abc + 4.0 > 0.0 == true;"
+            "let abc = 123.0; let ltl = true; \n print abc;\n print  2.0 * abc + 4.0 > 0.0 == true;"
                 .to_string();
         let mut scan = Scanner::new(sources);
 
@@ -615,7 +661,7 @@ mod tests {
 
     #[test]
     fn parser_test_nine() {
-        let sources = "var abc = 123.0;var bbb =10.0; abc =bbb= 10.0;".to_string();
+        let sources = "let abc = 123.0;let bbb =10.0; abc =bbb= 10.0;".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();

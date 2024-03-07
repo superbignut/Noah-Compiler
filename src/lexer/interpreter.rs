@@ -25,32 +25,55 @@ impl Interpreter {
     // output:
     pub fn interpreter(&mut self, statements: &Vec<Stmt>) -> Result<(), String> {
         for statement in statements {
-            match statement {
-                // If just an expression.
-                Stmt::Expression(v) => {
-                    let _ = self.evaluate(v)?; // Evaluate Expression.
+            self.execute(statement)?;
+        }
+        Ok(())
+    }
+
+    fn execute(&mut self, statement: &Stmt) -> Result<(), String> {
+        match statement {
+            // If just an expression.
+            Stmt::Expression(v) => {
+                let _ = self.evaluate(v)?; // Evaluate Expression.
+            }
+            // If a print statement.
+            Stmt::Print(v) => {
+                println!("{}", (self.evaluate(v)?).two_string()); // Print Expression.
+            }
+            // If a Var defination.
+            Stmt::Let { name, initializer } => {
+                let value;
+                if *initializer
+                    != (Expr::Literal {
+                        value: ExprLiteral::Nil,
+                    })
+                {
+                    value = self.evaluate(initializer)?;
+                    self.environment.define(name.lexeme.clone(), value); // Define variable in the temp Environment.
                 }
-                // If a print statement.
-                Stmt::Print(v) => {
-                    println!("{}", (self.evaluate(v)?).two_string()); // Print Expression.
-                }
-                // If a Var defination.
-                Stmt::Var { name, initializer } => {
-                    let value;
-                    if *initializer
-                        != (Expr::Literal {
-                            value: ExprLiteral::Nil,
-                        })
-                    {
-                        value = self.evaluate(initializer)?;
-                        self.environment.define(name.lexeme.clone(), value); // Define variable in the temp Environment.
-                    }
-                }
-                // If a Block.
-                Stmt::Block { statements } => {
-                    self.environment = Environment::new(Some(Box::new(self.environment.clone()))); // Save temp environment.and Restore later.
-                    self.interpreter(statements)?; // Scope recursively;
-                    self.environment = *self.environment.enclosing.clone().unwrap();
+            }
+            // If a Block.
+            Stmt::Block { statements } => {
+                self.environment = Environment::new(Some(Box::new(self.environment.clone()))); // Save temp environment.and Restore later.
+                self.interpreter(statements)?; // Scope recursively;
+                self.environment = *self.environment.enclosing.clone().unwrap();
+            }
+            // If an If.
+            Stmt::If {
+                condition,
+                thenBranch,
+                elseBranch,
+            } => {
+                let if_condition = self.evaluate(condition)?;
+                if self.is_truthy(if_condition) == ExprLiteral::True {
+                    // then branch.
+                    self.execute(thenBranch)?;
+                } else if let Some(v) = elseBranch {
+                    // If there is an else branch.
+                    self.execute(v)?;
+                } else {
+                    // No else branch, just continue.
+                    return Ok(());
                 }
             }
         }
@@ -103,6 +126,24 @@ impl Interpreter {
                 let new_value = self.evaluate(value)?; // recursively.
                 self.environment.assign(name, new_value.clone())?; // define variable.
                 Ok(new_value)
+            }
+            Expr::Logical {
+                left,
+                operator,
+                right,
+            } => {
+                let left = self.evaluate(left)?;
+                if operator.token_type == TokenType::Or {
+                    if self.is_truthy(left.clone()) == ExprLiteral::True {
+                        Ok(left) // A OR B : A == true return A
+                    } else {
+                        Ok(self.evaluate(right)?) // A OR B : A == false return B
+                    }
+                } else if self.is_truthy(left.clone()) == ExprLiteral::False {
+                    Ok(left) // A AND B : A == false return A
+                } else {
+                    Ok(self.evaluate(right)?) // A AND B : A == true return B
+                }
             }
 
             // 5 Binary
@@ -341,7 +382,7 @@ mod tests {
     }
     #[test]
     fn test_inter_three() {
-        let sources = "var a = 10.0; var b = 2.0; print a + b + 12.0; ".to_string();
+        let sources = "let a = 10.0; let b = 2.0; print a + b + 12.0; ".to_string();
 
         let mut scan = Scanner::new(sources);
 
@@ -361,7 +402,7 @@ mod tests {
     }
     #[test]
     fn test_inter_four() {
-        let sources = "var a = 10.0; var b = 2.0; print a + b + 12.0 >= 25.0 == true; ".to_string();
+        let sources = "let a = 10.0; let b = 2.0; print a + b + 12.0 >= 25.0 == true; ".to_string();
 
         let mut scan = Scanner::new(sources);
 
@@ -382,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_inter_five() {
-        let sources = "var a = 10.0; print a = 20.0; a = a + 20.0; print a ; ".to_string();
+        let sources = "let a = 10.0; print a = 20.0; a = a + 20.0; print a ; ".to_string();
 
         let mut scan = Scanner::new(sources);
 

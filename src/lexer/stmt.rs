@@ -4,7 +4,7 @@ use super::{expr::Expr, token::Token};
 pub enum Stmt {
     Expression(Expr),
     Print(Expr),
-    Var {
+    Let {
         name: Token,
         initializer: Expr,
     },

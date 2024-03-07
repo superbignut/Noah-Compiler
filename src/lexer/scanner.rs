@@ -41,7 +41,7 @@ impl Scanner {
             ("super", TokenType::Super),
             ("this", TokenType::This),
             ("true", TokenType::True),
-            ("var", TokenType::Var),
+            ("let", TokenType::Let),
             ("while", TokenType::While),
         ])
     }
@@ -395,7 +395,7 @@ mod tests {
 
     #[test]
     fn handle_equal_keyword_tokens() {
-        let sources = ">= var nil iff if".to_string();
+        let sources = ">= let nil iff if".to_string();
         let mut scan = Scanner::new(sources);
 
         let res = scan.scan_tokens();
@@ -412,13 +412,13 @@ mod tests {
 
     #[test]
     fn handle_real_sentence() {
-        let sources = "var num = 10.0 \n while true { num >= 1.0 }".to_string();
+        let sources = "let num = 10.0 \n while true { num >= 1.0 }".to_string();
         let mut scan = Scanner::new(sources);
 
         let res = scan.scan_tokens().unwrap();
 
         assert_eq!(res.len(), 12);
-        assert_eq!(res[0].token_type, TokenType::Var);
+        assert_eq!(res[0].token_type, TokenType::Let);
         assert_eq!(res[1].token_type, TokenType::Identifier);
         assert_eq!(res[2].token_type, TokenType::Equal);
         assert_eq!(res[3].token_type, TokenType::Number);
@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn handle_two_sentence() {
-        let sources = "var num = 10.0; \n while true { num >= 1.0 }".to_string();
+        let sources = "let num = 10.0; \n while true { num >= 1.0 }".to_string();
         let mut scan = Scanner::new(sources);
 
         let res = scan.scan_tokens();

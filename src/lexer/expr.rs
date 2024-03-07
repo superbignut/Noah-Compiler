@@ -24,6 +24,11 @@ pub enum Expr {
         name: Token, // not Expr
         value: Box<Expr>,
     },
+    Logical {
+        left: Box<Expr>,
+        operator: Token,
+        right: Box<Expr>,
+    },
 }
 
 impl Expr {
@@ -56,6 +61,7 @@ impl Expr {
             Expr::Assign { name, value } => {
                 todo!()
             }
+            _ => todo!(),
         }
     }
     pub fn print(&self) {
