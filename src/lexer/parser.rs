@@ -24,7 +24,9 @@ impl Parser {
 
     letDecl -> "let" Identifier ( "=" expression ) ? ";"
 
-    statement -> exprStmt | printStmt | block | ifStmt
+    statement -> exprStmt | printStmt | block | ifStmt | whileStmt
+
+    whileStmt -> "while" "(" expression ")" statement
 
     ifStmt -> "if" "(" expression ")" statement ("else" statement ) ?
 
@@ -106,7 +108,6 @@ impl Parser {
 
         Ok(Stmt::Let { name, initializer })
     }
-    //
 
     // brief: statement -> exprStmt | printStmt | block | ifStmt
     // input:
@@ -118,9 +119,88 @@ impl Parser {
             self.block()
         } else if self.match_tokens(&[TokenType::If]) {
             self.if_statement()
+        } else if self.match_tokens(&[TokenType::While]) {
+            self.while_statement()
+        } else if self.match_tokens(&[TokenType::For]) {
+            self.for_statement() // Syntactic sugar.
         } else {
             self.expression_statement()
         }
+    }
+
+    // for ( initializer condition increment ) body
+    // --------------Syntactic sugar------------->
+    // {
+    //  initializer while ( condition ) { body increment }
+    // }
+
+    // brief: for_statement -> "for" "(" ( letDecl | exprStmt | ";" ) expression ? ";" expression ? ")" statement
+    // input:
+    // output:
+    fn for_statement(&mut self) -> Result<Stmt, String> {
+        self.consume(TokenType::LeftParen)?;
+
+        let initializer = if self.match_tokens(&[TokenType::Semicolon]) {
+            None
+        } else if self.match_tokens(&[TokenType::Let]) {
+            Some(self.let_declaration()?)
+        } else {
+            Some(self.expression_statement()?)
+        };
+
+        let condition = if !self.check(TokenType::Semicolon) {
+            Some(self.expression()?)
+        } else {
+            // Always true.
+            Some(Expr::Literal {
+                value: ExprLiteral::True,
+            })
+        };
+        self.consume(TokenType::Semicolon)?;
+
+        let increment = if !self.check(TokenType::RightParen) {
+            Some(self.expression()?)
+        } else {
+            None
+        };
+
+        self.consume(TokenType::RightParen)?;
+
+        let mut body = self.statement()?;
+
+        if increment.is_some() {
+            body = Stmt::Block {
+                statements: vec![body, Stmt::Expression(increment.unwrap())],
+            }
+        }
+
+        body = Stmt::While {
+            condition: condition.unwrap(),
+            body: Box::new(body),
+        };
+
+        if initializer.is_some() {
+            body = Stmt::Block {
+                statements: vec![initializer.unwrap(), body],
+            }
+        }
+
+        Ok(body)
+    }
+
+    // brief: whileStmt -> "while" "(" expression ")" statement
+    // input:
+    // output:
+    fn while_statement(&mut self) -> Result<Stmt, String> {
+        self.consume(TokenType::LeftParen)?;
+
+        let condition = self.expression()?;
+
+        self.consume(TokenType::RightParen)?;
+
+        let body = Box::new(self.statement()?);
+
+        Ok(Stmt::While { condition, body })
     }
 
     // brief: ifStmt -> "if" "(" expression ")" statement ("else" statement ) ?
@@ -143,8 +223,8 @@ impl Parser {
 
         Ok(Stmt::If {
             condition,
-            thenBranch: then_branch,
-            elseBranch: else_branch,
+            then_branch,
+            else_branch,
         })
     }
 

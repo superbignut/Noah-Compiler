@@ -61,19 +61,27 @@ impl Interpreter {
             // If an If.
             Stmt::If {
                 condition,
-                thenBranch,
-                elseBranch,
+                then_branch,
+                else_branch,
             } => {
                 let if_condition = self.evaluate(condition)?;
-                if self.is_truthy(if_condition) == ExprLiteral::True {
+                if self.is_truthy(&if_condition) == ExprLiteral::True {
                     // then branch.
-                    self.execute(thenBranch)?;
-                } else if let Some(v) = elseBranch {
+                    self.execute(then_branch)?;
+                } else if let Some(v) = else_branch {
                     // If there is an else branch.
                     self.execute(v)?;
                 } else {
                     // No else branch, just continue.
                     return Ok(());
+                }
+            }
+            //If a While
+            Stmt::While { condition, body } => {
+                let mut while_condition = self.evaluate(condition)?;
+                while self.is_truthy(&while_condition) == ExprLiteral::True {
+                    self.execute(body)?;
+                    while_condition = self.evaluate(condition)?;
                 }
             }
         }
@@ -110,7 +118,7 @@ impl Interpreter {
                     ));
                 } else if operator.token_type == TokenType::Bang {
                     let evaluated = self.evaluate(right)?;
-                    return Ok(self.is_truthy(evaluated));
+                    return Ok(self.is_truthy(&evaluated));
                 }
                 Err(format!(
                     "Error occur when interpreter at line {} at {} for no matching unary operator.",
@@ -134,12 +142,12 @@ impl Interpreter {
             } => {
                 let left = self.evaluate(left)?;
                 if operator.token_type == TokenType::Or {
-                    if self.is_truthy(left.clone()) == ExprLiteral::True {
+                    if self.is_truthy(&left) == ExprLiteral::True {
                         Ok(left) // A OR B : A == true return A
                     } else {
                         Ok(self.evaluate(right)?) // A OR B : A == false return B
                     }
-                } else if self.is_truthy(left.clone()) == ExprLiteral::False {
+                } else if self.is_truthy(&left) == ExprLiteral::False {
                     Ok(left) // A AND B : A == false return A
                 } else {
                     Ok(self.evaluate(right)?) // A AND B : A == true return B
@@ -324,7 +332,7 @@ impl Interpreter {
     // brief: All is true but nil and false.
     // input:
     // output:
-    fn is_truthy(&self, expr: ExprLiteral) -> ExprLiteral {
+    fn is_truthy(&self, expr: &ExprLiteral) -> ExprLiteral {
         match expr {
             ExprLiteral::False | ExprLiteral::Nil => ExprLiteral::False,
             _ => ExprLiteral::True,
