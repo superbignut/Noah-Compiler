@@ -151,5 +151,24 @@
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/scope.png)
 
 
+6. #### Control Flow
+
+   if 和 while 的 parse 部分在 Stmt 中新建了 If_statement 和 While_statement 两种语句类型，并通过关键字和分隔符进行匹配 ; 解析部分值的注意的是 while 的判断部分需要每次更新 ; "or"  和 "and" 的优先级要比等式判断更低 : 
+
+    
+         assignment -> Identifier "=" assignment | logic_or
+
+         logic_or -> logic_and ( "or" logic_and) *
+
+         logic_and -> equality ( "and" equality) *
+
+         equality -> comparision ( ("!=" | "==") comparision  ) *
+
+   进而是 for 的实现，原作者没有通过再次增加 Stmt 实现，而是作为 while 的语法糖进行转换 :
+
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/sugar.png)
+
+
 [1]:https://craftinginterpreters.com/
 [2]:https://www.youtube.com/playlist?list=PLj_VrUwyDuXS4K3n7X4U4qmkjpuA8rJ76
