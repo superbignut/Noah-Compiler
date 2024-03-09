@@ -1,3 +1,4 @@
+pub mod callable;
 pub mod environment;
 pub mod expr;
 pub mod interpreter;

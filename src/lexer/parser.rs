@@ -46,13 +46,17 @@ impl Parser {
 
     equality -> comparision ( ("!=" | "==") comparision  ) *
 
-    comparision -> term ( ( ">" | ">=" | "<" | "<=") ) *
+    comparision -> term ( ( ">" | ">=" | "<" | "<=") term ) *
 
     term -> factor ( ( "-" | "+" ) factor ) *
 
     factor -> unary ( ( "/" | "*") unary ) *
 
-    unary -> ( ( "!" | "-" ) unary ) | primary
+    unary -> ( ( "!" | "-" ) unary ) | call
+
+    call -> primary ( "(" arguments ? ")" ) *
+
+    arguments -> expression ( "," expression ) *
 
     primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | Identifier
     */
@@ -351,7 +355,7 @@ impl Parser {
         Ok(expr)
     }
 
-    // brief: comparision -> term ( ( ">" | ">=" | "<" | "<=") ) *
+    // brief: comparision -> term ( ( ">" | ">=" | "<" | "<=") term ) *
     // input:
     // output:
     fn comparision(&mut self) -> Result<Expr, String> {
@@ -413,7 +417,7 @@ impl Parser {
         Ok(expr)
     }
 
-    // brief: unary -> ( ( "!" | "-" ) unary ) | primary
+    // brief: unary -> ( ( "!" | "-" ) unary ) | call
     // input:
     // output:
     fn unary(&mut self) -> Result<Expr, String> {
@@ -427,6 +431,55 @@ impl Parser {
             });
         }
         self.primary()
+    }
+
+    // brief: call -> primary ( "(" arguments ? ")" ) *
+    // input:
+    // output
+    fn call(&mut self) -> Result<Expr, String> {
+        let mut expr = self.primary()?;
+        loop {
+            if self.match_tokens(&[TokenType::LeftParen]) {
+                expr = self.finish_call(expr)?;
+            } else {
+                break;
+            }
+        }
+        Ok(expr)
+    }
+
+    fn finish_call(&mut self, callee: Expr) -> Result<Expr, String> {
+        let mut arguments = vec![];
+
+        if !self.check(TokenType::RightParen) {
+            loop {
+                arguments.push(self.expression()?);
+                if !self.match_tokens(&[TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+        let paren = self.consume(TokenType::RightParen)?;
+
+        if arguments.len() >= 255 {
+            return Err(format!(
+                "There are too many arguments at line {} at {}.",
+                paren.line_number, paren.lexeme
+            ));
+        }
+
+        Ok(Expr::Call {
+            callee: Box::new(callee),
+            paren,
+            arguments,
+        })
+    }
+
+    // brief: arguments -> expression ( "," expression ) *
+    // input:
+    // output
+    fn arguments(&mut self) {
+        todo!()
     }
 
     // brief: primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | Idetifier

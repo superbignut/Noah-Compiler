@@ -1,4 +1,7 @@
-use super::token::{LiterialValue, Token, TokenType};
+use super::{
+    callable::Callable,
+    token::{LiterialValue, Token, TokenType},
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
@@ -28,6 +31,11 @@ pub enum Expr {
         left: Box<Expr>,
         operator: Token,
         right: Box<Expr>,
+    },
+    Call {
+        callee: Box<Expr>,
+        paren: Token,
+        arguments: Vec<Expr>,
     },
 }
 
@@ -76,6 +84,7 @@ pub enum ExprLiteral {
     True,
     False,
     Nil,
+    Function(Box<dyn Callable>),
 }
 
 impl ExprLiteral {

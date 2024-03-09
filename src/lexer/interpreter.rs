@@ -125,6 +125,18 @@ impl Interpreter {
                     operator.line_number, operator.lexeme
                 ))
             }
+            Expr::Call {
+                callee,
+                paren,
+                arguments,
+            } => {
+                let callee = self.evaluate(callee)?;
+
+                let arguments: Result<Vec<ExprLiteral>, String> =
+                    arguments.iter().map(|x| self.evaluate(x)).collect();
+
+                todo!()
+            }
 
             // 4 Variable
             Expr::Variable { name } => Ok(self.environment.get(name)?), // Get variable.
