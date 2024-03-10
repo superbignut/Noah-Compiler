@@ -89,8 +89,21 @@ pub enum ExprLiteral {
 
 impl PartialEq for ExprLiteral {
     fn eq(&self, other: &Self) -> bool {
-        todo!()
+        use ExprLiteral::*;
+        match (self, other) {
+            (NumberLiteral(v1), NumberLiteral(v2)) => *v1 == *v2,
+            (StringLiteral(v1), StringLiteral(v2)) => *v1 == *v2,
+            (ExprLiteral::True, ExprLiteral::True) => true,
+            (ExprLiteral::False, ExprLiteral::False) => true,
+            (ExprLiteral::Nil, ExprLiteral::Nil) => true,
+            (Function(_), Function(_)) => false,
+            _ => false,
+        }
     }
+
+    // fn ne(&self, other: &Self) -> bool {
+    //     !self.eq(other)
+    // }
 }
 
 impl ExprLiteral {

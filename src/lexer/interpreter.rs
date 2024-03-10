@@ -135,7 +135,22 @@ impl Interpreter {
                 let arguments: Result<Vec<ExprLiteral>, String> =
                     arguments.iter().map(|x| self.evaluate(x)).collect();
 
-                todo!()
+                if let ExprLiteral::Function(f) = callee {
+                    let args = arguments?;
+                    if args.len() != f.arity() {
+                        return Err(format!(
+                            "Error occur , function expect {} args, but got {} at line: {}.",
+                            f.arity(),
+                            args.len(),
+                            paren.line_number
+                        ));
+                    }
+                    return f.call(self, args);
+                }
+                Err(format!(
+                    "Error occur when interpreter a function at line : {} at {}.",
+                    paren.line_number, paren.lexeme
+                ))
             }
 
             // 4 Variable
@@ -291,14 +306,14 @@ impl Interpreter {
                         ))
                     },
                     TokenType::EqualEqual => {
-                        if left_operand.is_equal(&right_operand) {
+                        if left_operand == right_operand {
                             Ok(ExprLiteral::True)
                         } else {
                             Ok(ExprLiteral::False)
                         }
                     },
                     TokenType::BangEqual => {
-                        if !left_operand.is_equal(&right_operand) {
+                        if left_operand  != right_operand {
                             Ok(ExprLiteral::True)
                         } else {
                             Ok(ExprLiteral::False)
