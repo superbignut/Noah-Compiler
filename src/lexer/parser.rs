@@ -311,7 +311,7 @@ impl Parser {
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right_expr),
-            }
+            };
         }
         Ok(expr)
     }

@@ -77,7 +77,7 @@ impl Expr {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum ExprLiteral {
     NumberLiteral(f64),
     StringLiteral(String),
@@ -85,6 +85,12 @@ pub enum ExprLiteral {
     False,
     Nil,
     Function(Box<dyn Callable>),
+}
+
+impl PartialEq for ExprLiteral {
+    fn eq(&self, other: &Self) -> bool {
+        todo!()
+    }
 }
 
 impl ExprLiteral {
@@ -95,6 +101,9 @@ impl ExprLiteral {
             Self::True => "True".to_string(),
             Self::False => "False".to_string(),
             Self::Nil => "Nil".to_string(),
+            Self::Function(f) => {
+                todo!()
+            }
         }
     }
 
