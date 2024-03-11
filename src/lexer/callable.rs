@@ -1,4 +1,5 @@
-use std::fmt::Debug;
+use std::time::UNIX_EPOCH;
+use std::{fmt::Debug, time::SystemTime};
 
 use super::{expr::ExprLiteral, interpreter::Interpreter};
 
@@ -27,7 +28,7 @@ impl PartialEq for Box<dyn Callable> {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct MyCallable;
+pub struct MyCallable;
 
 impl Callable for MyCallable {
     fn call(
@@ -42,6 +43,31 @@ impl Callable for MyCallable {
         todo!()
     }
 
+    fn clone_box(&self) -> Box<dyn Callable> {
+        Box::new(*self)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct MyClock;
+
+impl Callable for MyClock {
+    fn call(
+        &self,
+        interpreter: &Interpreter,
+        arguments: Vec<ExprLiteral>,
+    ) -> Result<ExprLiteral, String> {
+        let start = SystemTime::now();
+        let since_the_epoch = start
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+
+        Ok(ExprLiteral::NumberLiteral(since_the_epoch.as_secs_f64()))
+    }
+
+    fn arity(&self) -> usize {
+        0
+    }
     fn clone_box(&self) -> Box<dyn Callable> {
         Box::new(*self)
     }

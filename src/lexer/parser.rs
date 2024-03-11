@@ -430,7 +430,7 @@ impl Parser {
                 right: Box::new(right_expr),
             });
         }
-        self.primary()
+        self.call()
     }
 
     // brief: call -> primary ( "(" arguments ? ")" ) *
@@ -563,11 +563,12 @@ impl Parser {
     // input:
     // output:
     fn consume(&mut self, token_type: TokenType) -> Result<Token, String> {
-        if self.check(token_type) {
+        if self.check(token_type.clone()) {
             Ok(self.advance())
         } else {
             Err(format!(
-                "Parsering error occur when consuming some token at line: {} in {}.",
+                "Parsering error occur when consuming token {} at line: {} in {}.",
+                token_type,
                 self.peek().line_number,
                 self.peek().lexeme,
             ))
@@ -795,6 +796,56 @@ mod tests {
     #[test]
     fn parser_test_nine() {
         let sources = "let abc = 123.0;let bbb =10.0; abc =bbb= 10.0;".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+
+    #[test]
+    fn parser_test_ten() {
+        let sources = "abc();".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+    #[test]
+    fn parser_test_tenone() {
+        let sources = "abc()();".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
+
+    #[test]
+    fn parser_test_tentwo() {
+        let sources = "abc(1.0,2.0,3.0)(4.0);".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();

@@ -1,4 +1,5 @@
 use super::{
+    callable::MyClock,
     environment::Environment,
     expr::{Expr, ExprLiteral},
     parser::{self, Parser},
@@ -7,7 +8,8 @@ use super::{
 };
 
 pub struct Interpreter {
-    environment: Environment, // struct to save variavle and create scope.
+    environment: Environment, // struct to save variavle and create local scope.
+    globals: Environment,     // global scope.
 }
 
 impl Interpreter {
@@ -15,8 +17,16 @@ impl Interpreter {
     // input:
     // output:
     pub fn new() -> Self {
+        let mut globals = Environment::new(None);
+
+        globals.define(
+            "clock".to_string(),
+            ExprLiteral::Function(Box::new(MyClock)),
+        );
+
         Self {
-            environment: Environment::new(None),
+            environment: globals.clone(),
+            globals,
         }
     }
 
