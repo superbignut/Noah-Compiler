@@ -66,7 +66,7 @@ pub enum TokenType {
     CLass,
     Else,
     False,
-    Fun,
+    Fn,
     For,
     If,
     Nil,

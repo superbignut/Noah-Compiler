@@ -1,6 +1,6 @@
 use super::{expr::Expr, token::Token};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Stmt {
     Expression(Expr),
     Print(Expr),
@@ -18,6 +18,11 @@ pub enum Stmt {
     },
     While {
         condition: Expr,
+        body: Box<Stmt>,
+    },
+    Function {
+        name: Token,
+        params: Vec<Token>,
         body: Box<Stmt>,
     },
 }

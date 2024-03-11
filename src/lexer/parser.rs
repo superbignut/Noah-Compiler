@@ -20,7 +20,13 @@ impl Parser {
     /*
     program -> declaration * EOF
 
-    declaration -> letDecl | statement
+    declaration -> letDecl | statement | funDecl
+
+    funDecl -> "fn" function
+
+    function -> Identifier "(" parameters ? ")" block
+
+    parameters -> Identifier ("," Identifier ) *
 
     letDecl -> "let" Identifier ( "=" expression ) ? ";"
 
@@ -73,12 +79,24 @@ impl Parser {
         Ok(statements)
     }
 
-    // brief: declaration -> letDecl | statement
+    // brief: declaration -> letDecl | statement | funDecl
     // input:
     // output:
     fn declaration(&mut self) -> Result<Stmt, String> {
         if self.match_tokens(&[TokenType::Let]) {
             match self.let_declaration() {
+                Ok(v) => {
+                    return Ok(v);
+                }
+                Err(err) => {
+                    self.synchronize();
+                    return Err(err);
+                }
+            }
+        }
+
+        if self.match_tokens(&[TokenType::Fn]) {
+            match self.function("function".to_string()) {
                 Ok(v) => {
                     return Ok(v);
                 }
@@ -97,8 +115,44 @@ impl Parser {
         }
     }
 
+    // brief: function -> Identifier "(" parameters ? ")" block
+    // input:
+    // output:
+    fn function(&mut self, kind: String) -> Result<Stmt, String> {
+        let name = self.consume(TokenType::Identifier)?;
+        self.consume(TokenType::LeftParen)?;
+
+        let mut params = vec![];
+
+        if !self.check(TokenType::RightParen) {
+            loop {
+                params.push(self.consume(TokenType::Identifier)?);
+                if !self.match_tokens(&[TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+        let paren = self.consume(TokenType::RightParen)?;
+
+        if params.len() >= 255 {
+            return Err(format!(
+                "There are too many parameters at line {} at {}.",
+                paren.line_number, paren.lexeme
+            ));
+        }
+
+        self.consume(TokenType::LeftBrace)?;
+
+        let body = Box::new(self.block()?);
+
+        Ok(Stmt::Function { name, params, body })
+    }
+
+    // parameters -> Identifier ("," Identifier ) *
+
     // brief: letDecl -> "let" Identifier ( "=" expression ) ? ";"
     // input:
+
     // output:
     fn let_declaration(&mut self) -> Result<Stmt, String> {
         let name = self.consume(TokenType::Identifier)?;
@@ -257,6 +311,7 @@ impl Parser {
     // brief: block -> "{" declaration "}"
     // input:
     // output:
+    // Attention: "{" needed to be consumed before calling block().
     fn block(&mut self) -> Result<Stmt, String> {
         let mut statements = vec![];
         // is_at_end check for forgeting closing "}"
@@ -586,7 +641,7 @@ impl Parser {
             }
             match self.peek().token_type {
                 TokenType::CLass
-                | TokenType::Fun
+                | TokenType::Fn
                 | TokenType::Let
                 | TokenType::For
                 | TokenType::If
@@ -811,8 +866,8 @@ mod tests {
     }
 
     #[test]
-    fn parser_test_ten() {
-        let sources = "abc();".to_string();
+    fn parser_test_tenzero() {
+        let sources = "add(1.0 , 2.0);".to_string();
         let mut scan = Scanner::new(sources);
 
         let tok = scan.scan_tokens().unwrap();
@@ -859,5 +914,22 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn parser_test_tenthree() {
+        let sources = "fn add( a, b ){ a + b; }".to_string();
+        let mut scan = Scanner::new(sources);
+
+        let tok = scan.scan_tokens().unwrap();
+
+        match Parser::new(tok).parse() {
+            Err(error) => {
+                println!("[    Error!    ] ---> {}", error);
+            }
+            Ok(v) => {
+                dbg!(v);
+            }
+        }
+    }
 }
-// cargo test <unique keyword> --  --nocapture
+// cargo test some-keyword --  --nocapture

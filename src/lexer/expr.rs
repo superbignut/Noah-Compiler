@@ -84,7 +84,7 @@ pub enum ExprLiteral {
     True,
     False,
     Nil,
-    Function(Box<dyn Callable>),
+    FunctionLiteral(Box<dyn Callable>),
 }
 
 impl PartialEq for ExprLiteral {
@@ -96,7 +96,7 @@ impl PartialEq for ExprLiteral {
             (ExprLiteral::True, ExprLiteral::True) => true,
             (ExprLiteral::False, ExprLiteral::False) => true,
             (ExprLiteral::Nil, ExprLiteral::Nil) => true,
-            (Function(_), Function(_)) => false,
+            (FunctionLiteral(_), FunctionLiteral(_)) => false,
             _ => false,
         }
     }
@@ -114,7 +114,7 @@ impl ExprLiteral {
             Self::True => "True".to_string(),
             Self::False => "False".to_string(),
             Self::Nil => "Nil".to_string(),
-            Self::Function(f) => {
+            Self::FunctionLiteral(f) => {
                 todo!()
             }
         }

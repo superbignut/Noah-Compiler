@@ -2,6 +2,7 @@ use super::{
     callable::MyClock,
     environment::Environment,
     expr::{Expr, ExprLiteral},
+    function::MyFunction,
     parser::{self, Parser},
     stmt::Stmt,
     token::{Token, TokenType},
@@ -9,7 +10,7 @@ use super::{
 
 pub struct Interpreter {
     environment: Environment, // struct to save variavle and create local scope.
-    globals: Environment,     // global scope.
+    pub globals: Environment, // global scope.
 }
 
 impl Interpreter {
@@ -21,7 +22,7 @@ impl Interpreter {
 
         globals.define(
             "clock".to_string(),
-            ExprLiteral::Function(Box::new(MyClock)),
+            ExprLiteral::FunctionLiteral(Box::new(MyClock)),
         );
 
         Self {
@@ -86,7 +87,7 @@ impl Interpreter {
                     return Ok(());
                 }
             }
-            //If a While
+            // If a While
             Stmt::While { condition, body } => {
                 let mut while_condition = self.evaluate(condition)?;
                 while self.is_truthy(&while_condition) == ExprLiteral::True {
@@ -94,7 +95,38 @@ impl Interpreter {
                     while_condition = self.evaluate(condition)?;
                 }
             }
+            // If a Function statement.
+            Stmt::Function { name, params, body } => {
+                let function = MyFunction::new(statement.clone())?;
+                self.environment.define(
+                    name.lexeme.clone(),
+                    ExprLiteral::FunctionLiteral(Box::new(function)),
+                );
+            }
         }
+        Ok(())
+    }
+
+    // brief: Interperter a function block , and refresh the Global environemnt.
+    // input:
+    // output:
+    pub fn execute_function_block(
+        &mut self,
+        statements: &Vec<Stmt>,
+        environemnt: Environment,
+    ) -> Result<(), String> {
+        let previous = self.environment.clone();
+
+        self.environment = environemnt;
+
+        self.interpreter(statements)?;
+
+        let new_globals = self.globals.clone(); // useless
+
+        self.environment = previous;
+
+        self.globals = new_globals; // useless
+
         Ok(())
     }
 
@@ -135,6 +167,7 @@ impl Interpreter {
                     operator.line_number, operator.lexeme
                 ))
             }
+            // 8 Call
             Expr::Call {
                 callee,
                 paren,
@@ -145,7 +178,7 @@ impl Interpreter {
                 let arguments: Result<Vec<ExprLiteral>, String> =
                     arguments.iter().map(|x| self.evaluate(x)).collect();
 
-                if let ExprLiteral::Function(f) = callee {
+                if let ExprLiteral::FunctionLiteral(f) = callee {
                     let args = arguments?;
                     if args.len() != f.arity() {
                         return Err(format!(
@@ -158,7 +191,7 @@ impl Interpreter {
                     return f.call(self, args);
                 }
                 Err(format!(
-                    "Error occur when interpreter a function at line : {} at {}.",
+                    "Error occur when interpreter a function at line : {} at {}. Expected FunctionLiteral, got others.",
                     paren.line_number, paren.lexeme
                 ))
             }
@@ -166,12 +199,13 @@ impl Interpreter {
             // 4 Variable
             Expr::Variable { name } => Ok(self.environment.get(name)?), // Get variable.
 
-            // 5 Assign
+            // 6 Assign
             Expr::Assign { name, value } => {
                 let new_value = self.evaluate(value)?; // recursively.
                 self.environment.assign(name, new_value.clone())?; // define variable.
                 Ok(new_value)
             }
+            // 7 Logical
             Expr::Logical {
                 left,
                 operator,

@@ -1,29 +1,21 @@
-{
-    let aaa = 11.0;
-    {
-        let aaa = 12.0;
-        print aaa;
-    }
+let ddd = 0.11;
 
-    print aaa;
-}
 
-for(let i = 1.0; i < 7.0; i = i + 2.0) {
-        let j = 0.0;
-        while( j < i ) {
-                
-                if( i + j <= 5.0 and i >= 2.0 and j >= 1.0)
-                {
-                            print i + j;
-                }
-                
-                j = j + 1.0;
-        }
-        print "one loop finish!";
+fn hello_world(aaa, bbb){
+    
+    print aaa + bbb;
+
 }
 
 
-        
+fn add(num1, num2){
 
-        
+    let temp = 1.0;
+    print num1 + num2 + temp;
+}
+
+
+hello_world("Hello" + " ", "World!");
+
+add(10.0 + ddd, 100.0 + 1000.0);
 

@@ -32,7 +32,7 @@ impl Scanner {
             ("else", TokenType::Else),
             ("false", TokenType::False),
             ("for", TokenType::For),
-            ("fun", TokenType::Fun),
+            ("fn", TokenType::Fn),
             ("if", TokenType::If),
             ("nil", TokenType::Nil),
             ("or", TokenType::Or),
