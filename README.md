@@ -178,15 +178,24 @@
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/fun_parser.png)
 
 
-   进而是解析部分，函数声明语句需要在变量空间中增加 函数名字到可调用函数对象的映射; 函数调用部分需要实现:
+   进而是解析部分，解析函数声明语句时，需要在变量空间中增加函数名字到可调用函数对象的映射，也就是将形式参数，和使用形式参数的语句构成的 block 重新封装起来，在附加可调用的 Trait 后，像普通变量一样插入哈希表 ; 
+   
+   除了添加特征之外，这次对可调用对象的封装，与最初的由 parser 给出的封装的内容是一致的，一定程度上实现了前后端解耦合 ;
+
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/decouple.png)
+
+
+   在已经对函数声明解析完成的基础上，解析函数调用语句时只需要根据函数名字取出哈希表中的可调用对象，并作用在实参上即可 ;
+
+
+
+
+   在rust的实现过程中，函数调用对象是通过 impl Callable 来进行实现，这个特征对象的关键需求就是实现了可被调用的 call 函数 :
 
       1. 创建函数私有的变量空间 ;
       2. 将函数声明时的形参和调用时的实参进行匹配，并插入到私有变量空间 ;
-      3. 在私有空间中解析"大括号"中的语句;
-
-
-   在rust的实现过程中，函数调用对象是通过 Trait Object 来进行实现，这个特征对象的关键需求就是实现了可被调用的 call 函数 ;
-
+      3. 调用封装好的可调用对象，在私有空间中解析 "大括号" 中的语句;
 
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/call.png)
 
