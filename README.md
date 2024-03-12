@@ -164,10 +164,33 @@
 
          equality -> comparision ( ("!=" | "==") comparision  ) *
 
-   进而是 for 的实现，原作者没有通过再次增加 Stmt 实现，而是作为 while 的语法糖进行转换 :
+   进而是 for 的实现， 不需要再次增加 Stmt 实现，而是作为 while 的语法糖进行转换 :
 
 
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/sugar.png)
+
+
+7. #### Functions
+
+   函数的实现包括函数声明和函数调用两个部分，首先是 parser 部分，类似于变量声明，函数声明通过在语句层面增加 Stmt::Function 来实现; 而函数调用则通过在表达式层面增加 Expr::Call 来实现 ;
+
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/fun_parser.png)
+
+
+   进而是解析部分，函数声明语句需要在变量空间中增加 函数名字到可调用函数对象的映射; 函数调用部分需要实现:
+
+      1. 创建函数私有的变量空间 ;
+      2. 将函数声明时的形参和调用时的实参进行匹配，并插入到私有变量空间 ;
+      3. 在私有空间中解析"大括号"中的语句;
+
+
+   在rust的实现过程中，函数调用对象是通过 Trait Object 来进行实现，这个特征对象的关键需求就是实现了可被调用的 call 函数 ;
+
+
+   ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/call.png)
+
+
 
 
 [1]:https://craftinginterpreters.com/

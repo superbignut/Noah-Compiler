@@ -19,3 +19,12 @@ hello_world("Hello" + " ", "World!");
 
 add(10.0 + ddd, 100.0 + 1000.0);
 
+
+
+for(let i = 0.0; i< 5.0; i = i + 1.0){
+        for(let j = 0.0; j < i;  j = j + 1.0){
+                add(i, 2.0 * j);
+                hello_world("aaa" , " bbb");
+        }
+}
+
