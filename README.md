@@ -195,9 +195,12 @@
 
       1. 创建函数私有的变量空间 ;
       2. 将函数声明时的形参和调用时的实参进行匹配，并插入到私有变量空间 ;
-      3. 调用封装好的可调用对象，在私有空间中解析 "大括号" 中的语句;
+      3. 调用封装好的可调用对象，在私有空间中解析 "大括号" 中的语句 ;
 
    ![interpreter](https://github.com/superbignut/ltl-compiler/blob/master/sources/call.png)
+
+
+   比较复杂的地方是返回值的添加，我们使用 Result 的第一个 Ok 进行类似于 Err 一样的向外传递。 需要注意的是，不仅是函数，包括 控制流的 if, while, 还有 block 的 内部，即所有调用解析 Stmt 的函数 execute() 和 解析 Vec[ Stmt ]的函数 interpreter() 的地方都需要有是否 return 的判断，进而可以跳出解析过程。
 
 
 

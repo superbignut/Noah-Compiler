@@ -13,7 +13,10 @@ fn run_file(file_path: &String) -> Result<(), String> {
 
     let pas = Parser::new(tok).parse().unwrap();
 
-    Interpreter::new().interpreter(&pas)
+    //    dbg!(pas);
+
+    let _ = Interpreter::new().interpreter(&pas)?; // return 1 ???
+    Ok(())
 }
 
 fn main() {

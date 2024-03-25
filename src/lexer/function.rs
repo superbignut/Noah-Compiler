@@ -37,15 +37,17 @@ impl Callable for MyFunction {
         interpreter: &mut Interpreter,
         arguments: Vec<ExprLiteral>,
     ) -> Result<ExprLiteral, String> {
-        let mut environment = Environment::new(Some(Box::new(interpreter.globals.clone()))); // new  clean environment including no variables expect gloabls.
+        let mut environment = Environment::new(Some(Box::new(interpreter.globals.clone())));
+        //let mut environment = Environment::new(Some(Box::new(self.closure.clone())));
+        // new  clean environment including no variables expect gloabls. so the funtion also can't be found.
 
         for (index, item) in self.params.iter().enumerate() {
             environment.define(item.lexeme.clone(), arguments[index].clone()); // including params. Combine virtual params with real arguments.
         }
 
-        interpreter.execute_function_block(&self.body, environment)?; // execute and refresh global.
+        interpreter.execute_function_block(&self.body, environment) // execute and refresh global.
 
-        Ok(ExprLiteral::Nil)
+        // Ok(ExprLiteral::Nil)
     }
 
     fn clone_box(&self) -> Box<dyn Callable> {

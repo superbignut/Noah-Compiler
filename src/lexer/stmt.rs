@@ -25,4 +25,9 @@ pub enum Stmt {
         params: Vec<Token>,
         body: Box<Stmt>,
     },
+
+    Return {
+        keyword: Token,
+        value: Expr,
+    },
 }

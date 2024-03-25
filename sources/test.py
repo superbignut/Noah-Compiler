@@ -1,30 +1,29 @@
-let ddd = 0.11;
-
-
-fn hello_world(aaa, bbb){
-    
-    print aaa + bbb;
-
+fn max(num1, num2){
+    if(num1 > num2)
+        return num1;
+    else
+        return num2;
 }
 
 
-fn add(num1, num2){
+fn min(num1, num2){
+    if(num1 < num2)
+        return num1;
+    else
+        return num2;
+}
 
-    let temp = 1.0;
-    print num1 + num2 + temp;
+fn big_minus_small(num1, num2){
+    return max(num1, num2) - min(num1, num2); 
+}
+
+fn fib(n){
+    if(n <= 1.0)
+        return n;
+    return fib(1.0); 
 }
 
 
-hello_world("Hello" + " ", "World!");
+print big_minus_small(9.0, min(2.0 + 3.0 , 1.0));
 
-add(10.0 + ddd, 100.0 + 1000.0);
-
-
-
-for(let i = 0.0; i< 5.0; i = i + 1.0){
-        for(let j = 0.0; j < i;  j = j + 1.0){
-                add(i, 2.0 * j);
-                hello_world("aaa" , " bbb");
-        }
-}
-
+print fib(10.0);

@@ -1,3 +1,5 @@
+use std::{arch::x86_64::_SIDD_SWORD_OPS, ffi::c_long};
+
 use super::{
     callable::MyClock,
     environment::Environment,
@@ -11,6 +13,11 @@ use super::{
 pub struct Interpreter {
     environment: Environment, // struct to save variavle and create local scope.
     pub globals: Environment, // global scope.
+}
+
+pub enum IsReturn {
+    Yes(ExprLiteral),
+    No,
 }
 
 impl Interpreter {
@@ -34,14 +41,23 @@ impl Interpreter {
     // brief: Pub function to evaluate Vec<Stmt> by Match all kinds of Stmt.
     // input:
     // output:
-    pub fn interpreter(&mut self, statements: &Vec<Stmt>) -> Result<(), String> {
+    pub fn interpreter(&mut self, statements: &Vec<Stmt>) -> Result<ExprLiteral, String> {
         for statement in statements {
-            self.execute(statement)?;
+            if let IsReturn::Yes(val) = self.execute(statement)? {
+                return Ok(val);
+            }
         }
-        Ok(())
+        Ok(ExprLiteral::Nil)
     }
 
-    fn execute(&mut self, statement: &Stmt) -> Result<(), String> {
+    fn check_return(&self, result: IsReturn) -> Result<IsReturn, String> {
+        if let IsReturn::Yes(val) = result {
+            return Ok(IsReturn::Yes(val));
+        }
+        Ok(IsReturn::No)
+    }
+
+    fn execute(&mut self, statement: &Stmt) -> Result<IsReturn, String> {
         match statement {
             // If just an expression.
             Stmt::Expression(v) => {
@@ -66,8 +82,11 @@ impl Interpreter {
             // If a Block.
             Stmt::Block { statements } => {
                 self.environment = Environment::new(Some(Box::new(self.environment.clone()))); // Save temp environment.and Restore later.
-                self.interpreter(statements)?; // Scope recursively;
+                let block_return = self.interpreter(statements)?; // Scope recursively; // return Todo
                 self.environment = *self.environment.enclosing.clone().unwrap();
+                if block_return != ExprLiteral::Nil {
+                    return Ok(IsReturn::Yes(block_return));
+                }
             }
             // If an If.
             Stmt::If {
@@ -77,21 +96,24 @@ impl Interpreter {
             } => {
                 let if_condition = self.evaluate(condition)?;
                 if self.is_truthy(&if_condition) == ExprLiteral::True {
-                    // then branch.
-                    self.execute(then_branch)?;
+                    // then_branch
+                    return self.execute(then_branch);
                 } else if let Some(v) = else_branch {
                     // If there is an else branch.
-                    self.execute(v)?;
+                    return self.execute(v);
                 } else {
                     // No else branch, just continue.
-                    return Ok(());
+                    return Ok(IsReturn::No);
                 }
             }
             // If a While
             Stmt::While { condition, body } => {
                 let mut while_condition = self.evaluate(condition)?;
                 while self.is_truthy(&while_condition) == ExprLiteral::True {
-                    self.execute(body)?;
+                    // self.execute(body)?;
+                    if let IsReturn::Yes(val) = self.execute(body)? {
+                        return Ok(IsReturn::Yes(val));
+                    }
                     while_condition = self.evaluate(condition)?;
                 }
             }
@@ -100,11 +122,32 @@ impl Interpreter {
                 let function = MyFunction::new(statement.clone())?;
                 self.environment.define(
                     name.lexeme.clone(),
+                    ExprLiteral::FunctionLiteral(Box::new(function.clone())),
+                );
+
+                // function.closure = self.environment.clone();
+                self.globals.define(
+                    // globol means not only default function, but normal function in this block.
+                    // so that you can not only recursively, but also call other function in the same block.
+                    name.lexeme.clone(),
                     ExprLiteral::FunctionLiteral(Box::new(function)),
                 );
             }
+            Stmt::Return { keyword, value } => {
+                let return_value = if *value
+                    == (Expr::Literal {
+                        value: ExprLiteral::Nil,
+                    }) {
+                    ExprLiteral::Nil
+                } else {
+                    //println!("{:?}", self.evaluate(value)?);
+                    self.evaluate(value)?
+                };
+
+                return Ok(IsReturn::Yes(return_value));
+            }
         }
-        Ok(())
+        Ok(IsReturn::No)
     }
 
     // brief: Interperter a function block , and refresh the Global environemnt.
@@ -114,20 +157,20 @@ impl Interpreter {
         &mut self,
         statements: &Vec<Stmt>,
         environemnt: Environment,
-    ) -> Result<(), String> {
+    ) -> Result<ExprLiteral, String> {
         let previous = self.environment.clone();
 
         self.environment = environemnt;
 
-        self.interpreter(statements)?;
+        let return_value = self.interpreter(statements)?;
 
-        let new_globals = self.globals.clone(); // useless
+        // let new_globals = self.globals.clone(); // useless
 
         self.environment = previous;
 
-        self.globals = new_globals; // useless
+        // self.globals = new_globals; // useless
 
-        Ok(())
+        Ok(return_value)
     }
 
     // brief: Evaluate an Expression.

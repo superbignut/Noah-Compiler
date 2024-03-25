@@ -30,7 +30,9 @@ impl Parser {
 
     letDecl -> "let" Identifier ( "=" expression ) ? ";"
 
-    statement -> exprStmt | printStmt | block | ifStmt | whileStmt
+    statement -> exprStmt | printStmt | block | ifStmt | whileStmt | returnStmt
+
+    returnStmt -> return expression ? ";"
 
     whileStmt -> "while" "(" expression ")" statement
 
@@ -167,7 +169,7 @@ impl Parser {
         Ok(Stmt::Let { name, initializer })
     }
 
-    // brief: statement -> exprStmt | printStmt | block | ifStmt
+    // brief: statement -> exprStmt | printStmt | block | ifStmt | whileStmt | returnStmt
     // input:
     // output:
     fn statement(&mut self) -> Result<Stmt, String> {
@@ -181,16 +183,32 @@ impl Parser {
             self.while_statement()
         } else if self.match_tokens(&[TokenType::For]) {
             self.for_statement() // Syntactic sugar.
+        } else if self.match_tokens(&[TokenType::Return]) {
+            self.return_statement()
         } else {
             self.expression_statement()
         }
     }
 
+    // brief: returnStmt -> return expression ? ";"
+    // input:
+    // output:
+    fn return_statement(&mut self) -> Result<Stmt, String> {
+        let keyword = self.previous();
+        let mut value = Expr::Literal {
+            value: ExprLiteral::Nil,
+        };
+        if !self.check(TokenType::Semicolon) {
+            value = self.expression()?;
+        }
+        self.consume(TokenType::Semicolon)?;
+
+        Ok(Stmt::Return { keyword, value })
+    }
+
     // for ( initializer condition increment ) body
-    // --------------Syntactic sugar------------->
-    // {
-    //  initializer while ( condition ) { body increment }
-    // }
+    // -----------------Syntactic sugar----------------------
+    // { initializer while ( condition ) { body increment } }
 
     // brief: for_statement -> "for" "(" ( letDecl | exprStmt | ";" ) expression ? ";" expression ? ")" statement
     // input:
