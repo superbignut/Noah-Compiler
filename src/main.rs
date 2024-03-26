@@ -29,3 +29,12 @@ fn main() {
         }
     }
 }
+
+/*
+Todo:
+Organize the overall logic of function definition and functon calling parts.Specifically:
+   1 -----> interperter's environment;
+   2 -----> function's closure;
+   3 -----> environment's enclosing;
+which is so confused and need to be reorganized.
+*/

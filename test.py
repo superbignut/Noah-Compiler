@@ -1,18 +1,17 @@
+//
 
-fn make_func(){
+fn resursive(l, r){
 
-    let i = 1.0;
-
-    fn count() {
-
-        i = i + 1.0;
-        print i;
-    }
+    if(l >= r)
+        return 0.0;
     
-    return count;
+    let sum = 1.0;
+    
+    sum = sum + resursive(l, r - 1.0);
+
+    return sum;
 }
 
 
-let test = make_func();
-test();
-test();
+
+print resursive(1.0 , 10.0);
