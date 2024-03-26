@@ -119,18 +119,10 @@ impl Interpreter {
             }
             // If a Function statement.
             Stmt::Function { name, params, body } => {
-                let function = MyFunction::new(statement.clone())?;
+                let function = MyFunction::new(statement.clone(), self.environment.clone())?; // closure don't include function-itself
                 self.environment.define(
                     name.lexeme.clone(),
                     ExprLiteral::FunctionLiteral(Box::new(function.clone())),
-                );
-
-                // function.closure = self.environment.clone();
-                self.globals.define(
-                    // globol means not only default function, but normal function in this block.
-                    // so that you can not only recursively, but also call other function in the same block.
-                    name.lexeme.clone(),
-                    ExprLiteral::FunctionLiteral(Box::new(function)),
                 );
             }
             Stmt::Return { keyword, value } => {
@@ -156,19 +148,19 @@ impl Interpreter {
     pub fn execute_function_block(
         &mut self,
         statements: &Vec<Stmt>,
-        environemnt: Environment,
+        environemnt: &mut Environment,
     ) -> Result<ExprLiteral, String> {
-        let previous = self.environment.clone();
+        let previous = self.environment.clone(); // save origin environment.
 
-        self.environment = environemnt;
+        self.environment = environemnt.clone(); // create a function call temporary environment by clone the function's closure.
 
-        let return_value = self.interpreter(statements)?;
+        let return_value = self.interpreter(statements)?; // interpreter in the temp environment.
 
-        // let new_globals = self.globals.clone(); // useless
+        // dbg!("{:?}", self.environment.enclosing.clone());
 
-        self.environment = previous;
+        environemnt.enclosing = self.environment.enclosing.clone(); // restore the changes back to closure.
 
-        // self.globals = new_globals; // useless
+        self.environment = previous; // restore the origin environment.
 
         Ok(return_value)
     }
@@ -221,7 +213,7 @@ impl Interpreter {
                 let arguments: Result<Vec<ExprLiteral>, String> =
                     arguments.iter().map(|x| self.evaluate(x)).collect();
 
-                if let ExprLiteral::FunctionLiteral(f) = callee {
+                if let ExprLiteral::FunctionLiteral(mut f) = callee {
                     let args = arguments?;
                     if args.len() != f.arity() {
                         return Err(format!(

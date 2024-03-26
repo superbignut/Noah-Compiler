@@ -5,7 +5,7 @@ use super::{expr::ExprLiteral, interpreter::Interpreter};
 
 pub trait Callable: Debug {
     fn call(
-        &self,
+        &mut self,
         interpreter: &mut Interpreter,
         arguments: Vec<ExprLiteral>,
     ) -> Result<ExprLiteral, String>;
@@ -32,7 +32,7 @@ pub struct MyCallable;
 
 impl Callable for MyCallable {
     fn call(
-        &self,
+        &mut self,
         interpreter: &mut Interpreter,
         arguments: Vec<ExprLiteral>,
     ) -> Result<ExprLiteral, String> {
@@ -53,7 +53,7 @@ pub struct MyClock;
 
 impl Callable for MyClock {
     fn call(
-        &self,
+        &mut self,
         interpreter: &mut Interpreter,
         arguments: Vec<ExprLiteral>,
     ) -> Result<ExprLiteral, String> {

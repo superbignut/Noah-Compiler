@@ -20,7 +20,7 @@ fn run_file(file_path: &String) -> Result<(), String> {
 }
 
 fn main() {
-    match run_file(&String::from("sources/test.py")) {
+    match run_file(&String::from("test.py")) {
         Ok(()) => {
             println!("[     PASS!    ] ---> Compile Successfully!!!");
         }

@@ -10,15 +10,17 @@ pub struct MyFunction {
     name: Token,
     params: Vec<Token>,
     body: Vec<Stmt>,
+    pub closure: Environment,
 }
 impl MyFunction {
-    pub fn new(declaration: Stmt) -> Result<Self, String> {
+    pub fn new(declaration: Stmt, closure: Environment) -> Result<Self, String> {
         if let Stmt::Function { name, params, body } = declaration.clone() {
             if let Stmt::Block { statements } = *body {
                 return Ok(Self {
                     name,
                     params,
                     body: statements,
+                    closure,
                 });
             }
         }
@@ -33,21 +35,30 @@ impl Callable for MyFunction {
     }
 
     fn call(
-        &self,
+        &mut self,
         interpreter: &mut Interpreter,
         arguments: Vec<ExprLiteral>,
     ) -> Result<ExprLiteral, String> {
-        let mut environment = Environment::new(Some(Box::new(interpreter.globals.clone())));
-        //let mut environment = Environment::new(Some(Box::new(self.closure.clone())));
+        //let mut environment = Environment::new(Some(Box::new(interpreter.globals.clone())));
+        let mut environment = Environment::new(Some(Box::new(self.closure.clone())));
+
+        // define itsef into environment, sothat we can call function-self recurisivly.
+        environment.define(
+            self.name.lexeme.clone(),
+            ExprLiteral::FunctionLiteral(Box::new(self.clone())),
+        );
+
         // new  clean environment including no variables expect gloabls. so the funtion also can't be found.
 
         for (index, item) in self.params.iter().enumerate() {
             environment.define(item.lexeme.clone(), arguments[index].clone()); // including params. Combine virtual params with real arguments.
         }
 
-        interpreter.execute_function_block(&self.body, environment) // execute and refresh global.
+        let ans = interpreter.execute_function_block(&self.body, &mut environment);
 
-        // Ok(ExprLiteral::Nil)
+        self.closure = environment;
+
+        ans
     }
 
     fn clone_box(&self) -> Box<dyn Callable> {
